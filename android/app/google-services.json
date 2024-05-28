@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "78903841535",
+    "project_id": "langverse-acbef",
+    "storage_bucket": "langverse-acbef.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:78903841535:android:da9b6ba9d23d655ca0b2ca",
+        "android_client_info": {
+          "package_name": "com.example.langverse"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBJC3guZQH66RigsohnyhYoN6GY4B9DNso"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
