@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'pages/login_page.dart';
-// import 'pages/register_page.dart';
+import 'pages/register_page.dart';
 import 'pages/home_page.dart';
 
 void main() {
@@ -23,7 +23,7 @@ class Langverse extends StatelessWidget {
       home: LoginPage(),
       routes: {
         '/login': (context) => LoginPage(),
-        // '/register': (context) => RegisterPage(),
+         '/register': (context) => RegisterPage(),
         '/home': (context) => HomePage(),
       },
     );

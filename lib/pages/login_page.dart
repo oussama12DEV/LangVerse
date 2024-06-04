@@ -54,8 +54,22 @@ class LoginPage extends StatelessWidget {
                     onPressed: () {},
                   ),
                 ],
+
               ),
-            ],
+           InkWell(
+            onTap: () {
+              // Handle the tap
+              Navigator.pushReplacementNamed(context, '/register');
+            },
+            child: const Text(
+              'Register Now',
+              style: TextStyle(
+                color: Colors.blue,
+                decoration: TextDecoration.underline,
+                fontSize: 20,
+              ),
+            ),
+           )],
           )),
     );
   }
