@@ -35,6 +35,17 @@ class _LoginPageState extends State<LoginPage> {
                 width: 250,
                 height: 200,
               ),
+              const Row(
+                children: [
+                  Text(
+                    'Log In',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 35,
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(height: 20),
               TextFormField(
                 decoration: const InputDecoration(labelText: 'Email'),

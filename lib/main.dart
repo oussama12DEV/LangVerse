@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:langverse/firebase_options.dart';
-import 'package:langverse/pages/settings_page.dart';
+import 'package:langverse/preferences/theme.dart';
+import 'package:langverse/preferences/util.dart';
 import 'package:langverse/preferences/theme_provider.dart';
 import 'package:provider/provider.dart';
 import 'pages/login_page.dart';
@@ -38,10 +39,12 @@ class Langverse extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<DarkThemeProvider>(context);
+    TextTheme textTheme = createTextTheme(context, "Alata", "Aclonica");
+    MaterialTheme theme = MaterialTheme(textTheme);
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Langverse',
-      theme: themeProvider.darkTheme ? ThemeData.dark() : ThemeData.light(),
+      theme: themeProvider.darkTheme ? theme.dark() : theme.light(),
       initialRoute: '/',
       routes: {
         '/': (context) => StreamBuilder<User?>(
