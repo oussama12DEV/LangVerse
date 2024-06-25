@@ -23,7 +23,7 @@ class HomePage extends StatelessWidget {
         }),
       ),
       body: const Row(
-        children: [Text(FirebaseAuth.instance.currentUser.name)],
+        children: [],
       ),
     );
   }
