@@ -24,6 +24,7 @@ class Langverse extends StatelessWidget {
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<DarkThemeProvider>(context);
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Langverse',
       theme: themeProvider.darkTheme ? ThemeData.dark() : ThemeData.light(),
       home: LoginPage(),

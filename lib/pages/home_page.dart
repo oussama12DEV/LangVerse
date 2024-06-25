@@ -6,11 +6,11 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  int _selectedIndex = 0;
+  int _selectedIndex = 1;
 
   static const List<Widget> _widgetOptions = <Widget>[
-    Text('Home Page Content'),
     Text('Page 2 Content'),
+    Text('Home Page Content'),
     Text('Page 3 Content'),
   ];
 
@@ -32,16 +32,16 @@ class _HomePageState extends State<HomePage> {
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
+            icon: Icon(Icons.business),
+            label: 'Chat Rooms',
+          ),
+          BottomNavigationBarItem(
             icon: Icon(Icons.home),
             label: 'Home',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.business),
-            label: 'Business',
-          ),
-          BottomNavigationBarItem(
             icon: Icon(Icons.school),
-            label: 'School',
+            label: 'Quizes',
           ),
         ],
         currentIndex: _selectedIndex,
