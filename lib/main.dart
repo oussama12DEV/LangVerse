@@ -7,7 +7,7 @@ import 'package:langverse/preferences/theme_provider.dart';
 import 'package:provider/provider.dart';
 import 'pages/login_page.dart';
 import 'pages/register_page.dart';
-import 'pages/home_page.dart';
+import 'pages/index_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,7 +28,7 @@ class Langverse extends StatelessWidget {
         if (requireAuth && user == null) {
           return LoginPage();
         } else if (!requireAuth && user != null) {
-          return HomePage();
+          return IndexPage();
         }
         return child;
       },
@@ -52,7 +52,7 @@ class Langverse extends StatelessWidget {
                   if (user == null) {
                     return LoginPage();
                   }
-                  return HomePage();
+                  return IndexPage();
                 }
                 return const Scaffold(
                   body: Center(child: CircularProgressIndicator()),
@@ -63,8 +63,7 @@ class Langverse extends StatelessWidget {
             _routeWrapper(child: LoginPage(), requireAuth: false),
         '/register': (context) =>
             _routeWrapper(child: RegisterPage(), requireAuth: false),
-        '/home': (context) => _routeWrapper(child: HomePage()),
-        '/settings': (context) => _routeWrapper(child: SettingsPage()),
+        '/index': (context) => _routeWrapper(child: IndexPage()),
       },
     );
   }
