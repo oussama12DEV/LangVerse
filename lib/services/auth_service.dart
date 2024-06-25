@@ -21,7 +21,6 @@ class AuthService {
         toastLength: Toast.LENGTH_LONG,
         gravity: ToastGravity.BOTTOM,
         timeInSecForIosWeb: 3,
-        backgroundColor: const Color.fromARGB(255, 152, 54, 244),
         textColor: Colors.white,
         fontSize: 16.0,
       );
@@ -51,7 +50,6 @@ class AuthService {
         toastLength: Toast.LENGTH_LONG,
         gravity: ToastGravity.BOTTOM,
         timeInSecForIosWeb: 3,
-        backgroundColor: Colors.red,
         textColor: Colors.white,
         fontSize: 16.0,
       );

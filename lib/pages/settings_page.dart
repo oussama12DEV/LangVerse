@@ -15,8 +15,8 @@ class SettingsPage extends StatelessWidget {
             decoration: BoxDecoration(
               color: Theme.of(context).primaryColor,
             ),
-            child: Text(
-              'Settings Menu',
+            child: const Text(
+              'LangVerse Settings',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 24,
@@ -24,8 +24,8 @@ class SettingsPage extends StatelessWidget {
             ),
           ),
           ListTile(
-            leading: Icon(Icons.person),
-            title: Text('Edit Profile'),
+            leading: const Icon(Icons.person),
+            title: const Text('Edit Profile'),
             onTap: () {
               Navigator.push(
                 context,
@@ -34,8 +34,8 @@ class SettingsPage extends StatelessWidget {
             },
           ),
           ListTile(
-            leading: Icon(Icons.lock),
-            title: Text('Change Password'),
+            leading: const Icon(Icons.lock),
+            title: const Text('Change Password'),
             onTap: () {
               Navigator.push(
                 context,
@@ -44,8 +44,8 @@ class SettingsPage extends StatelessWidget {
             },
           ),
           ListTile(
-            leading: Icon(Icons.brightness_6),
-            title: Text('Dark Mode'),
+            leading: const Icon(Icons.brightness_6),
+            title: const Text('Dark Mode'),
             trailing: Switch(
               value: themeProvider.darkTheme,
               onChanged: (bool value) {
@@ -54,8 +54,8 @@ class SettingsPage extends StatelessWidget {
             ),
           ),
           ListTile(
-            leading: Icon(Icons.logout),
-            title: Text('Sign Out'),
+            leading: const Icon(Icons.logout),
+            title: const Text('Sign Out'),
             onTap: () async {
               await AuthService().signOut();
               Navigator.pushReplacementNamed(context, '/login');

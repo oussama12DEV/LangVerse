@@ -8,7 +8,7 @@ class ChatroomsPage extends StatelessWidget {
         title: Center(
           // Center the Container
           child: Container(
-            padding: EdgeInsets.symmetric(
+            padding: const EdgeInsets.symmetric(
                 horizontal: 8.0), // Add some horizontal padding
             width: MediaQuery.of(context).size.width *
                 0.8, // Make the Container take 80% of the AppBar's width
