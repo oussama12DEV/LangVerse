@@ -112,7 +112,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 decoration:
                     const InputDecoration(labelText: 'Confirm Password'),
                 validator: (val) {
-                  if (val!.isEmpty) return 'Enter a password';
+                  if (val!.isEmpty) return 'Please confirm password';
                   if (password != confirmPassword)
                     return 'Passwords do not match'; // Check if passwords match
                   return null;
