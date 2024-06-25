@@ -1,12 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:langverse/services/auth_service.dart';
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
+  @override
+  _LoginPageState createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  final _formKey = GlobalKey<FormState>();
+  final AuthService _auth = AuthService();
+  String email = '';
+  String password = '';
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Padding(
+        body: Form(
+      key: _formKey,
+      child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -14,26 +26,33 @@ class LoginPage extends StatelessWidget {
             children: <Widget>[
               const FlutterLogo(size: 100),
               const SizedBox(height: 20),
-              const TextField(
-                decoration: InputDecoration(labelText: 'Email'),
+              TextFormField(
+                decoration: const InputDecoration(labelText: 'Email'),
+                validator: (val) => val!.isEmpty ? 'Enter a Email' : null,
+                onChanged: (val) {
+                  setState(() => email = val);
+                },
               ),
-              const TextField(
-                decoration: InputDecoration(labelText: 'Password'),
+              TextFormField(
+                decoration: const InputDecoration(labelText: 'Password'),
                 obscureText: true,
+                validator: (val) => val!.isEmpty ? 'Enter a password' : null,
+                onChanged: (val) {
+                  setState(() => password = val);
+                },
               ),
               const SizedBox(height: 20),
               ElevatedButton(
-                  onPressed: () {
-                    Fluttertoast.showToast(
-                      msg: "hamid",
-                      toastLength: Toast.LENGTH_LONG,
-                      gravity: ToastGravity.BOTTOM,
-                      timeInSecForIosWeb: 1,
-                      backgroundColor: Colors.red,
-                      textColor: Colors.white,
-                      fontSize: 16.0,
-                    );
-                    // Navigator.pushReplacementNamed(context, '/home');
+                  onPressed: () async {
+                    if (_formKey.currentState!.validate()) {
+                      dynamic result =
+                          await _auth.signInWithEmailPassword(email, password);
+                      if (result == null) {
+                        print('Could not sign in with those credentials');
+                      } else {
+                        Navigator.pushReplacementNamed(context, '/home');
+                      }
+                    }
                   },
                   child: const Text("Login")),
               const SizedBox(height: 20),
@@ -80,6 +99,6 @@ class LoginPage extends StatelessWidget {
               )
             ],
           )),
-    );
+    ));
   }
 }

@@ -15,7 +15,15 @@ class AuthService {
       User? user = result.user;
       return user;
     } catch (e) {
-      print(e.toString());
+      Fluttertoast.showToast(
+        msg: e.toString().replaceAll(RegExp(r'\[.*?\]'), '').trim(),
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.BOTTOM,
+        timeInSecForIosWeb: 3,
+        backgroundColor: const Color.fromARGB(255, 152, 54, 244),
+        textColor: Colors.white,
+        fontSize: 16.0,
+      );
       return null;
     }
   }
@@ -38,10 +46,10 @@ class AuthService {
       return user;
     } catch (e) {
       Fluttertoast.showToast(
-        msg: e.toString(),
+        msg: e.toString().replaceAll(RegExp(r'\[.*?\]'), '').trim(),
         toastLength: Toast.LENGTH_LONG,
         gravity: ToastGravity.BOTTOM,
-        timeInSecForIosWeb: 1,
+        timeInSecForIosWeb: 3,
         backgroundColor: Colors.red,
         textColor: Colors.white,
         fontSize: 16.0,
