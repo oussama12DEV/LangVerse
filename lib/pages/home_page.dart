@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:langverse/pages/settings_page.dart';
 
@@ -6,16 +9,21 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       drawer: SettingsPage(),
-      appBar: AppBar(leading: Builder(builder: (BuildContext context) {
-        return IconButton(
-          icon: const Icon(Icons.settings),
-          onPressed: () {
-            Scaffold.of(context).openDrawer();
-          },
-        );
-      })),
+      appBar: AppBar(
+        elevation: 0.4,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        shadowColor: Colors.black,
+        leading: Builder(builder: (BuildContext context) {
+          return IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () {
+              Scaffold.of(context).openDrawer();
+            },
+          );
+        }),
+      ),
       body: const Row(
-        children: [],
+        children: [Text(FirebaseAuth.instance.currentUser.name)],
       ),
     );
   }

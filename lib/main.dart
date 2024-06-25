@@ -39,7 +39,7 @@ class Langverse extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<DarkThemeProvider>(context);
-    TextTheme textTheme = createTextTheme(context, "Alata", "Aclonica");
+    TextTheme textTheme = createTextTheme(context, "Alata", "Alata");
     MaterialTheme theme = MaterialTheme(textTheme);
     return MaterialApp(
       debugShowCheckedModeBanner: false,
