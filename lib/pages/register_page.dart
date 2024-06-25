@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:langverse/services/auth_service.dart';
+import 'package:langverse/preferences/theme_provider.dart';
+import 'package:provider/provider.dart';
 
 class RegisterPage extends StatefulWidget {
   @override
@@ -13,11 +15,13 @@ class _RegisterPageState extends State<RegisterPage> {
   final AuthService _auth = AuthService();
   String email = '';
   String password = '';
+  String confirmPassword = '';
   String username = '';
   String dob = '';
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<DarkThemeProvider>(context);
     return Scaffold(
       body: Form(
         key: _formKey,
@@ -27,11 +31,12 @@ class _RegisterPageState extends State<RegisterPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
-              const FlutterLogo(
-                size: 100,
-              ),
-              const SizedBox(
-                height: 20,
+              Image.asset(
+                themeProvider.darkTheme
+                    ? 'assets/images/logo_light.png'
+                    : 'assets/images/logo_dark.png',
+                width: 250,
+                height: 200,
               ),
               const Row(
                 children: [
@@ -84,6 +89,8 @@ class _RegisterPageState extends State<RegisterPage> {
                   if (pickedDate != null) {
                     setState(() {
                       _selectedDate = pickedDate;
+                      dob =
+                          "${pickedDate.day}/${pickedDate.month}/${pickedDate.year}";
                     });
                   }
                 },
@@ -104,9 +111,15 @@ class _RegisterPageState extends State<RegisterPage> {
               TextFormField(
                 decoration:
                     const InputDecoration(labelText: 'Confirm Password'),
-                validator: (val) => val!.isEmpty ? 'Enter a password' : null,
+                validator: (val) {
+                  if (val!.isEmpty) return 'Enter a password';
+                  if (password != confirmPassword)
+                    return 'Passwords do not match'; // Check if passwords match
+                  return null;
+                },
                 onChanged: (val) {
-                  setState(() => password = val);
+                  setState(() => confirmPassword =
+                      val); // Correctly handle confirm password
                 },
                 obscureText: true,
               ),
