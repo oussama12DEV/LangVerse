@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:langverse/firebase_options.dart';
 import 'package:langverse/pages/settings_page.dart';
 import 'package:langverse/preferences/theme_provider.dart';
@@ -20,6 +21,20 @@ void main() async {
 }
 
 class Langverse extends StatelessWidget {
+  Widget _routeWrapper({required Widget child, bool requireAuth = true}) {
+    return Builder(
+      builder: (context) {
+        final user = FirebaseAuth.instance.currentUser;
+        if (requireAuth && user == null) {
+          return LoginPage();
+        } else if (!requireAuth && user != null) {
+          return HomePage();
+        }
+        return child;
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<DarkThemeProvider>(context);
@@ -27,12 +42,29 @@ class Langverse extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Langverse',
       theme: themeProvider.darkTheme ? ThemeData.dark() : ThemeData.light(),
-      home: LoginPage(),
+      initialRoute: '/',
       routes: {
-        '/login': (context) => LoginPage(),
-        '/register': (context) => RegisterPage(),
-        '/home': (context) => HomePage(),
-        '/settings': (context) => SettingsPage(),
+        '/': (context) => StreamBuilder<User?>(
+              stream: FirebaseAuth.instance.authStateChanges(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.active) {
+                  User? user = snapshot.data;
+                  if (user == null) {
+                    return LoginPage();
+                  }
+                  return HomePage();
+                }
+                return const Scaffold(
+                  body: Center(child: CircularProgressIndicator()),
+                );
+              },
+            ),
+        '/login': (context) =>
+            _routeWrapper(child: LoginPage(), requireAuth: false),
+        '/register': (context) =>
+            _routeWrapper(child: RegisterPage(), requireAuth: false),
+        '/home': (context) => _routeWrapper(child: HomePage()),
+        '/settings': (context) => _routeWrapper(child: SettingsPage()),
       },
     );
   }

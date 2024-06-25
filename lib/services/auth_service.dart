@@ -6,6 +6,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  Stream<User?> get authStateChanges => _auth.authStateChanges();
 
   // Sign in with email and password
   Future<User?> signInWithEmailPassword(String email, String password) async {
