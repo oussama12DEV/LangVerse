@@ -1,5 +1,6 @@
 // Import necessary packages
 import 'package:flutter/material.dart';
+import 'package:langverse/services/auth_service.dart';
 import 'package:provider/provider.dart';
 import 'package:langverse/preferences/theme_provider.dart';
 
@@ -12,12 +13,23 @@ class SettingsPage extends StatelessWidget {
         title: const Text('Settings'),
       ),
       body: Center(
-        child: SwitchListTile(
-          title: const Text('Dark Mode'),
-          value: themeProvider.darkTheme,
-          onChanged: (bool value) {
-            themeProvider.darkTheme = value;
-          },
+        child: Column(
+          children: [
+            SwitchListTile(
+              title: const Text('Dark Mode'),
+              value: themeProvider.darkTheme,
+              onChanged: (bool value) {
+                themeProvider.darkTheme = value;
+              },
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                await AuthService().signOut();
+                Navigator.pushReplacementNamed(context, '/login');
+              },
+              child: Text('Sign Out'),
+            ),
+          ],
         ),
       ),
     );
