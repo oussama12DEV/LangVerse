@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'pages/login_page.dart';
 import 'pages/register_page.dart';
 import 'pages/home_page.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialfluized();
+  await Firebase.initializeApp();
   runApp(Langverse());
 }
 
@@ -23,7 +26,7 @@ class Langverse extends StatelessWidget {
       home: LoginPage(),
       routes: {
         '/login': (context) => LoginPage(),
-         '/register': (context) => RegisterPage(),
+        '/register': (context) => RegisterPage(),
         '/home': (context) => HomePage(),
       },
     );
