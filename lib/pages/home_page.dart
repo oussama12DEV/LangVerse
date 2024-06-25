@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:langverse/pages/settings_page.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -12,16 +13,19 @@ class _HomePageState extends State<HomePage> {
         Text('Home Page Content'),
         Scaffold(
           appBar: AppBar(
-            actions: <Widget>[
-              IconButton(
-                icon: const Icon(Icons.settings),
-                onPressed: () {
-                  // Maintenant, context est accessible ici
-                  Navigator.of(context).pushNamed('/settings');
-                },
-              ),
-            ],
+            leading: Builder(
+              builder: (BuildContext context) {
+                return IconButton(
+                  icon: Icon(Icons.settings), // Custom Icon
+                  onPressed: () {
+                    Scaffold.of(context).openDrawer();
+                  },
+                );
+              },
+            ),
+            actions: <Widget>[],
           ),
+          drawer: SettingsPage(),
           body: const Row(
             children: [],
           ),

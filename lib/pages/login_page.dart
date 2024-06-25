@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:langverse/pages/home_page.dart';
+import 'package:langverse/pages/settings_page.dart';
 import 'package:langverse/preferences/theme_provider.dart';
 import 'package:langverse/services/auth_service.dart';
 import 'package:provider/provider.dart';
