@@ -12,7 +12,8 @@ class SettingsPage extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Settings'),
       ),
-      body: Center(
+      body: SingleChildScrollView(
+        // Utiliser SingleChildScrollView pour permettre le défilement
         child: Column(
           children: [
             SwitchListTile(
@@ -22,12 +23,35 @@ class SettingsPage extends StatelessWidget {
                 themeProvider.darkTheme = value;
               },
             ),
+            TextFormField(
+              initialValue:
+                  'Nom Utilisateur', // Remplacer par la valeur dynamique
+              decoration: const InputDecoration(
+                labelText: 'Nom',
+              ),
+              readOnly: true, // Rendre le champ en lecture seule
+            ),
+            TextFormField(
+              initialValue:
+                  'Email Utilisateur', // Remplacer par la valeur dynamique
+              decoration: const InputDecoration(
+                labelText: 'Email',
+              ),
+              readOnly: true, // Rendre le champ en lecture seule
+            ),
+            ElevatedButton(
+              onPressed: () {
+                // Logique pour changer le mot de passe
+              },
+              child: const Text('Changer le mot de passe'),
+            ),
+            const Spacer(), // Utiliser Spacer pour pousser le contenu vers le haut
             ElevatedButton(
               onPressed: () async {
                 await AuthService().signOut();
                 Navigator.pushReplacementNamed(context, '/login');
               },
-              child: Text('Sign Out'),
+              child: const Text('Sign Out'),
             ),
           ],
         ),

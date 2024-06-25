@@ -8,11 +8,26 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 1;
 
-  static const List<Widget> _widgetOptions = <Widget>[
-    Text('Page 2 Content'),
-    Text('Home Page Content'),
-    Text('Page 3 Content'),
-  ];
+  List<Widget> _widgetOptions(BuildContext context) => [
+        Text('Home Page Content'),
+        Scaffold(
+          appBar: AppBar(
+            actions: <Widget>[
+              IconButton(
+                icon: const Icon(Icons.settings),
+                onPressed: () {
+                  // Maintenant, context est accessible ici
+                  Navigator.of(context).pushNamed('/settings');
+                },
+              ),
+            ],
+          ),
+          body: const Row(
+            children: [],
+          ),
+        ),
+        Text('Page 3 Content'),
+      ];
 
   void _onItemTapped(int index) {
     setState(() {
@@ -23,11 +38,8 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Home Page'),
-      ),
       body: Center(
-        child: _widgetOptions.elementAt(_selectedIndex),
+        child: _widgetOptions(context).elementAt(_selectedIndex),
       ),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
