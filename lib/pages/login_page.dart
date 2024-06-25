@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class LoginPage extends StatelessWidget {
@@ -23,7 +24,16 @@ class LoginPage extends StatelessWidget {
               const SizedBox(height: 20),
               ElevatedButton(
                   onPressed: () {
-                    Navigator.pushReplacementNamed(context, '/home');
+                    Fluttertoast.showToast(
+                      msg: "hamid",
+                      toastLength: Toast.LENGTH_LONG,
+                      gravity: ToastGravity.BOTTOM,
+                      timeInSecForIosWeb: 1,
+                      backgroundColor: Colors.red,
+                      textColor: Colors.white,
+                      fontSize: 16.0,
+                    );
+                    // Navigator.pushReplacementNamed(context, '/home');
                   },
                   child: const Text("Login")),
               const SizedBox(height: 20),
@@ -54,22 +64,21 @@ class LoginPage extends StatelessWidget {
                     onPressed: () {},
                   ),
                 ],
-
               ),
-           InkWell(
-            onTap: () {
-              // Handle the tap
-              Navigator.pushReplacementNamed(context, '/register');
-            },
-            child: const Text(
-              'Register Now',
-              style: TextStyle(
-                color: Colors.blue,
-                decoration: TextDecoration.underline,
-                fontSize: 20,
-              ),
-            ),
-           )],
+              const SizedBox(height: 20),
+              InkWell(
+                onTap: () {
+                  // Handle the tap
+                  Navigator.pushReplacementNamed(context, '/register');
+                },
+                child: const Text(
+                  "Don't have an Account? Register Now.",
+                  style: TextStyle(
+                    fontSize: 16,
+                  ),
+                ),
+              )
+            ],
           )),
     );
   }
