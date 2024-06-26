@@ -22,7 +22,7 @@ class ChatroomsService {
         id: chatRoomRef.id,
         title: title,
         userLimit: userLimit,
-        currentUsers: {}, // Initialize as empty set
+        currentUsers: {},
         language: language,
         creatorId: user.uid,
       );
@@ -57,7 +57,7 @@ class ChatroomsService {
 
       final chatRoomRef =
           FirebaseFirestore.instance.collection('chatrooms').doc(chatRoomId);
-      await chatRoomRef.delete(); // Remove the chatroom from Firestore
+      await chatRoomRef.delete();
 
       Fluttertoast.showToast(
         msg: "Chatroom removed successfully",
@@ -79,7 +79,7 @@ class ChatroomsService {
     }
   }
 
-  static Future<void> joinChatRoom(String chatRoomId) async {
+  static Future<bool> joinChatRoom(String chatRoomId) async {
     String? userId = _auth.currentUser?.uid;
     if (userId == null) {
       Fluttertoast.showToast(
@@ -90,7 +90,7 @@ class ChatroomsService {
         textColor: Colors.white,
         fontSize: 16.0,
       );
-      return;
+      return false;
     }
 
     try {
@@ -104,6 +104,7 @@ class ChatroomsService {
         if (chatRoom.currentUsers.length < chatRoom.userLimit) {
           chatRoom.currentUsers.add(userId);
           await chatRoomRef.update({'currentUsers': chatRoom.currentUsers});
+          return true;
         } else {
           throw Exception('Chat room is full');
         }
@@ -116,9 +117,11 @@ class ChatroomsService {
         toastLength: Toast.LENGTH_LONG,
         gravity: ToastGravity.BOTTOM,
         timeInSecForIosWeb: 3,
+        backgroundColor: Colors.black87,
         textColor: Colors.white,
         fontSize: 16.0,
       );
+      return false;
     }
   }
 

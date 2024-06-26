@@ -17,7 +17,6 @@ class InsideChatroomPage extends StatefulWidget {
 class _InsideChatroomPageState extends State<InsideChatroomPage> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-
   final _auth = FirebaseAuth.instance;
 
   @override
@@ -27,9 +26,10 @@ class _InsideChatroomPageState extends State<InsideChatroomPage> {
   }
 
   Future<void> attemptJoinChatRoom() async {
-    try {
-      await ChatroomsService.joinChatRoom(widget.chatRoom.id);
-    } catch (e) {
+    bool joinedSuccessfully =
+        await ChatroomsService.joinChatRoom(widget.chatRoom.id);
+    if (!joinedSuccessfully) {
+      dispose();
       Navigator.of(context).pop();
     }
   }
@@ -61,6 +61,7 @@ class _InsideChatroomPageState extends State<InsideChatroomPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.chatRoom.title),
+        centerTitle: true,
         actions: <Widget>[
           if (_auth.currentUser?.uid == widget.chatRoom.creatorId)
             IconButton(
@@ -96,8 +97,7 @@ class _InsideChatroomPageState extends State<InsideChatroomPage> {
                   itemBuilder: (context, index) {
                     var message = messages[index];
                     String senderId = message['senderId'];
-                    bool isCurrentUser = _auth.currentUser?.uid != null &&
-                        senderId == _auth.currentUser?.uid;
+                    bool isCurrentUser = _auth.currentUser?.uid == senderId;
 
                     return MessageBubble(
                       text: message['text'],

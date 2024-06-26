@@ -21,6 +21,27 @@ class MessageBubble extends StatefulWidget {
 
 class _MessageBubbleState extends State<MessageBubble> {
   bool showSubtitle = false;
+  String? username;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUsername();
+  }
+
+  Future<void> _fetchUsername() async {
+    try {
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(widget.senderId)
+          .get();
+      setState(() {
+        username = userDoc['username'];
+      });
+    } catch (e) {
+      print('Error fetching username: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,6 +53,18 @@ class _MessageBubbleState extends State<MessageBubble> {
             ? CrossAxisAlignment.end
             : CrossAxisAlignment.start,
         children: [
+          if (username != null)
+            Padding(
+              padding: const EdgeInsets.only(left: 8.0, right: 8.0, top: 4.0),
+              child: Text(
+                "@${username!}",
+                style: const TextStyle(
+                  fontSize: 14.0,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black54,
+                ),
+              ),
+            ),
           GestureDetector(
             onTap: () {
               setState(() {
