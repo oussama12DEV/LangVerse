@@ -1,7 +1,9 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:langverse/models/Chatroom.dart';
-import 'package:langverse/services/chatrooms_service.dart'; // Import the service where joinChatRoom and leaveChatRoom are defined
+import 'package:langverse/services/chatrooms_service.dart';
+import 'package:langverse/widgets/message_bubble_widget.dart';
 
 class InsideChatroomPage extends StatefulWidget {
   final ChatRoom chatRoom;
@@ -16,10 +18,22 @@ class _InsideChatroomPageState extends State<InsideChatroomPage> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
 
+  String? currentUserUid;
+
   @override
   void initState() {
     super.initState();
+    getCurrentUser();
     ChatroomsService.joinChatRoom(widget.chatRoom.id);
+  }
+
+  void getCurrentUser() {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser != null) {
+      setState(() {
+        currentUserUid = currentUser.uid;
+      });
+    }
   }
 
   @override
@@ -32,21 +46,16 @@ class _InsideChatroomPageState extends State<InsideChatroomPage> {
     String message = _messageController.text;
     if (message.isEmpty) return;
 
-    FirebaseFirestore.instance
-        .collection('chatrooms')
-        .doc(widget.chatRoom.id)
-        .collection('messages')
-        .add({
-      'text': message,
-      'createdAt': FieldValue.serverTimestamp(),
+    ChatroomsService.sendMessage(widget.chatRoom.id, message).then((_) {
+      _messageController.clear();
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }).catchError((error) {
+      print("Failed to send message: $error");
     });
-
-    _messageController.clear();
-    _scrollController.animateTo(
-      _scrollController.position.maxScrollExtent,
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeOut,
-    );
   }
 
   @override
@@ -63,7 +72,7 @@ class _InsideChatroomPageState extends State<InsideChatroomPage> {
                   .collection('chatrooms')
                   .doc(widget.chatRoom.id)
                   .collection('messages')
-                  .orderBy('createdAt', descending: true)
+                  .orderBy('timestamp', descending: true)
                   .snapshots(),
               builder: (context, snapshot) {
                 if (!snapshot.hasData) {
@@ -78,8 +87,15 @@ class _InsideChatroomPageState extends State<InsideChatroomPage> {
                   itemCount: messages.length,
                   itemBuilder: (context, index) {
                     var message = messages[index];
-                    return ListTile(
-                      title: Text(message['text']),
+                    String senderId = message['senderId'];
+                    bool isCurrentUser =
+                        currentUserUid != null && senderId == currentUserUid;
+
+                    return MessageBubble(
+                      text: message['text'],
+                      senderId: senderId,
+                      isCurrentUser: isCurrentUser,
+                      createdAt: message['timestamp'],
                     );
                   },
                 );
@@ -94,7 +110,7 @@ class _InsideChatroomPageState extends State<InsideChatroomPage> {
                   child: TextField(
                     controller: _messageController,
                     decoration: const InputDecoration(
-                      hintText: 'Enter message...',
+                      hintText: 'Enter a message...',
                       border: OutlineInputBorder(),
                     ),
                   ),

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:langverse/models/Chatroom.dart';
 import 'package:langverse/services/chatrooms_service.dart';
-import 'inside_chatroom_page.dart'; // Make sure to create this file
-import 'create_chatroom_modal.dart'; // Import the new modal file
+import 'inside_chatroom_page.dart';
+import 'create_chatroom_modal.dart';
 
 class ChatroomsPage extends StatefulWidget {
   @override
@@ -12,7 +12,6 @@ class ChatroomsPage extends StatefulWidget {
 
 class _ChatroomsPageState extends State<ChatroomsPage> {
   final TextEditingController _searchController = TextEditingController();
-  final ChatroomsService _chatroomService = ChatroomsService();
   List<ChatRoom> _chatRooms = [];
   DocumentSnapshot? _lastDocument;
   bool _isLoading = false;
@@ -58,10 +57,9 @@ class _ChatroomsPageState extends State<ChatroomsPage> {
       setState(() {
         _isLoading = false;
         _hasMore = false;
-        _chatRooms = []; // Clear existing chat rooms on error
+        _chatRooms = [];
       });
 
-      // Handle error if needed
       print('Error fetching chat rooms: $e');
     }
   }
@@ -84,10 +82,9 @@ class _ChatroomsPageState extends State<ChatroomsPage> {
     } catch (e) {
       setState(() {
         _isLoading = false;
-        _chatRooms = []; // Clear existing chat rooms on error
+        _chatRooms = [];
       });
 
-      // Handle error if needed
       print('Error searching chat rooms: $e');
     }
   }

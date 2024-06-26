@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:langverse/services/chatrooms_service.dart'; // Import your chatrooms_service file here
+import 'package:langverse/services/chatrooms_service.dart';
 
 class CreateChatRoomModal extends StatelessWidget {
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
@@ -59,10 +59,8 @@ class CreateChatRoomModal extends StatelessWidget {
                   int userLimit = int.parse(userLimitController.text);
                   String language = languageController.text;
 
-                  // Call your service method to create chat room
                   ChatroomsService.createChatRoom(title, userLimit, language)
                       .then((_) {
-                    // Show success message
                     Fluttertoast.showToast(
                       msg: 'Chat room created successfully',
                       toastLength: Toast.LENGTH_LONG,
@@ -72,10 +70,8 @@ class CreateChatRoomModal extends StatelessWidget {
                       fontSize: 16.0,
                     );
 
-                    // Close the modal
                     Navigator.pop(context);
                   }).catchError((e) {
-                    // Show error message
                     Fluttertoast.showToast(
                       msg: e
                           .toString()

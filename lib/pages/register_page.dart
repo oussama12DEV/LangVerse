@@ -5,6 +5,8 @@ import 'package:langverse/preferences/theme_provider.dart';
 import 'package:provider/provider.dart';
 
 class RegisterPage extends StatefulWidget {
+  const RegisterPage({super.key});
+
   @override
   _RegisterPageState createState() => _RegisterPageState();
 }
@@ -113,13 +115,13 @@ class _RegisterPageState extends State<RegisterPage> {
                     const InputDecoration(labelText: 'Confirm Password'),
                 validator: (val) {
                   if (val!.isEmpty) return 'Please confirm password';
-                  if (password != confirmPassword)
-                    return 'Passwords do not match'; // Check if passwords match
+                  if (password != confirmPassword) {
+                    return 'Passwords do not match';
+                  }
                   return null;
                 },
                 onChanged: (val) {
-                  setState(() => confirmPassword =
-                      val); // Correctly handle confirm password
+                  setState(() => confirmPassword = val);
                 },
                 obscureText: true,
               ),
@@ -135,7 +137,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         print('Signed in');
                       }
                     }
-                    // Navigator.pushReplacementNamed(context, '/login');
+                    Navigator.pushReplacementNamed(context, '/login');
                   },
                   child: const Text("Sign Up")),
               const SizedBox(height: 20),
@@ -170,7 +172,6 @@ class _RegisterPageState extends State<RegisterPage> {
               const SizedBox(height: 20),
               InkWell(
                 onTap: () {
-                  // Handle the tap
                   Navigator.pushReplacementNamed(context, '/login');
                 },
                 child: const Text(

@@ -185,11 +185,21 @@ class ChatroomsService {
     }
   }
 
-  static Future<void> sendMessage(
-      String chatRoomId, String senderId, String text) async {
+  static Future<void> sendMessage(String chatRoomId, String text) async {
     try {
-      final messageRef =
-          FirebaseFirestore.instance.collection('messages').doc();
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) {
+        throw Exception("No user logged in");
+      }
+      String senderId = currentUser.uid; // Get the current user's ID
+
+      // Reference to the chatroom's messages collection
+      final messageRef = FirebaseFirestore.instance
+          .collection('chatrooms')
+          .doc(chatRoomId)
+          .collection('messages')
+          .doc(); // Auto-generate a message ID
+
       Message message = Message(
         id: messageRef.id,
         chatRoomId: chatRoomId,
