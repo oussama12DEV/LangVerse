@@ -18,21 +18,19 @@ class _InsideChatroomPageState extends State<InsideChatroomPage> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
 
-  String? currentUserUid;
+  final _auth = FirebaseAuth.instance;
 
   @override
   void initState() {
     super.initState();
-    getCurrentUser();
-    ChatroomsService.joinChatRoom(widget.chatRoom.id);
+    attemptJoinChatRoom();
   }
 
-  void getCurrentUser() {
-    final currentUser = FirebaseAuth.instance.currentUser;
-    if (currentUser != null) {
-      setState(() {
-        currentUserUid = currentUser.uid;
-      });
+  Future<void> attemptJoinChatRoom() async {
+    try {
+      await ChatroomsService.joinChatRoom(widget.chatRoom.id);
+    } catch (e) {
+      Navigator.of(context).pop();
     }
   }
 
@@ -63,6 +61,16 @@ class _InsideChatroomPageState extends State<InsideChatroomPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.chatRoom.title),
+        actions: <Widget>[
+          if (_auth.currentUser?.uid == widget.chatRoom.creatorId)
+            IconButton(
+              icon: const Icon(Icons.delete),
+              onPressed: () async {
+                await ChatroomsService.removeChatRoom(widget.chatRoom.id);
+                Navigator.of(context).pop();
+              },
+            ),
+        ],
       ),
       body: Column(
         children: [
@@ -88,8 +96,8 @@ class _InsideChatroomPageState extends State<InsideChatroomPage> {
                   itemBuilder: (context, index) {
                     var message = messages[index];
                     String senderId = message['senderId'];
-                    bool isCurrentUser =
-                        currentUserUid != null && senderId == currentUserUid;
+                    bool isCurrentUser = _auth.currentUser?.uid != null &&
+                        senderId == _auth.currentUser?.uid;
 
                     return MessageBubble(
                       text: message['text'],

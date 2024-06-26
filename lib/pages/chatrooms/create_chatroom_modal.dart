@@ -2,11 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:langverse/services/chatrooms_service.dart';
 
-class CreateChatRoomModal extends StatelessWidget {
+class CreateChatRoomModal extends StatefulWidget {
+  @override
+  _CreateChatRoomModalState createState() => _CreateChatRoomModalState();
+}
+
+class _CreateChatRoomModalState extends State<CreateChatRoomModal> {
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
-  final TextEditingController titleController = TextEditingController();
-  final TextEditingController userLimitController = TextEditingController();
-  final TextEditingController languageController = TextEditingController();
+  String title = '';
+  int userLimit = 1; // Default value
+  String? selectedLanguage;
+  List<String> languages = ['French', 'English', 'Spanish'];
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +24,6 @@ class CreateChatRoomModal extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             TextFormField(
-              controller: titleController,
               decoration: const InputDecoration(labelText: 'Chat Room Title'),
               validator: (value) {
                 if (value == null || value.isEmpty) {
@@ -26,40 +31,62 @@ class CreateChatRoomModal extends StatelessWidget {
                 }
                 return null;
               },
-            ),
-            TextFormField(
-              controller: userLimitController,
-              decoration: const InputDecoration(labelText: 'User Limit'),
-              keyboardType: TextInputType.number,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter a user limit';
-                }
-                if (int.tryParse(value) == null) {
-                  return 'Please enter a valid number';
-                }
-                return null;
+              onChanged: (value) {
+                setState(() {
+                  title = value;
+                });
               },
             ),
-            TextFormField(
-              controller: languageController,
-              decoration: const InputDecoration(labelText: 'Language'),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter a language';
-                }
-                return null;
-              },
+            const SizedBox(height: 16.0),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'User Limit: $userLimit',
+                  style: const TextStyle(fontSize: 16.0),
+                ),
+                Expanded(
+                  child: Slider(
+                    value: userLimit.toDouble(),
+                    min: 1,
+                    max: 50,
+                    divisions: 49,
+                    onChanged: (double value) {
+                      setState(() {
+                        userLimit = value.toInt();
+                      });
+                    },
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16.0),
+            DropdownButtonFormField<String>(
+              validator: (val) => val == null || val.isEmpty
+                  ? 'Please select a language'
+                  : null,
+              value: selectedLanguage,
+              onChanged: (String? newValue) {
+                setState(() {
+                  selectedLanguage = newValue;
+                });
+              },
+              items: languages.map((String language) {
+                return DropdownMenuItem<String>(
+                  value: language,
+                  child: Text(language),
+                );
+              }).toList(),
+              decoration: const InputDecoration(
+                labelText: 'Language',
+              ),
+            ),
+            const SizedBox(height: 20.0),
             ElevatedButton(
               onPressed: () {
                 if (formKey.currentState!.validate()) {
-                  String title = titleController.text;
-                  int userLimit = int.parse(userLimitController.text);
-                  String language = languageController.text;
-
-                  ChatroomsService.createChatRoom(title, userLimit, language)
+                  ChatroomsService.createChatRoom(
+                          title, userLimit, selectedLanguage!)
                       .then((_) {
                     Fluttertoast.showToast(
                       msg: 'Chat room created successfully',

@@ -64,7 +64,7 @@ class _ChatroomsPageState extends State<ChatroomsPage> {
     }
   }
 
-  Future<void> _searchChatRooms() async {
+  void _searchChatRooms(String searchText) async {
     setState(() {
       _isLoading = true;
       _hasMore = false;
@@ -72,7 +72,7 @@ class _ChatroomsPageState extends State<ChatroomsPage> {
 
     try {
       List<ChatRoom> searchResults = await ChatroomsService.searchChatRooms(
-        name: _searchController.text,
+        name: searchText,
       );
 
       setState(() {
@@ -89,7 +89,7 @@ class _ChatroomsPageState extends State<ChatroomsPage> {
     }
   }
 
-  void _showCreateChatRoomModal() {
+  void _showCreateChatRoomModal(BuildContext context) {
     showModalBottomSheet(
       context: context,
       builder: (context) => CreateChatRoomModal(),
@@ -100,70 +100,80 @@ class _ChatroomsPageState extends State<ChatroomsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Center(
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0),
-            width: MediaQuery.of(context).size.width * 0.8,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20.0),
-            ),
-            child: TextField(
-              controller: _searchController,
-              decoration: const InputDecoration(
-                hintText: 'Search...',
-                prefixIcon: Icon(Icons.search, color: Colors.grey),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(20.0)),
-                  borderSide: BorderSide.none,
-                ),
-                fillColor: Colors.white,
-                filled: true,
-              ),
-              onSubmitted: (value) {
-                _searchChatRooms();
-              },
-            ),
-          ),
-        ),
+        title: const Text('Chatrooms'),
+        centerTitle: true,
       ),
       body: Column(
         children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                hintText: 'Search for chatrooms...',
+                prefixIcon: const Icon(Icons.search),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
+              ),
+              onSubmitted: (value) {
+                _searchChatRooms(value.trim());
+              },
+            ),
+          ),
           Expanded(
-            child: ListView.builder(
-              itemCount: _chatRooms.length + (_hasMore ? 1 : 0),
-              itemBuilder: (context, index) {
-                if (index == _chatRooms.length) {
-                  return ElevatedButton(
-                    onPressed: () => _fetchChatRooms(isLoadMore: true),
-                    child: _isLoading
-                        ? const CircularProgressIndicator()
-                        : const Text('Show More'),
-                  );
+            child: StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('chatrooms')
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
                 }
-                final chatRoom = _chatRooms[index];
-                return ListTile(
-                  title: Text(chatRoom.title),
-                  subtitle: Text('Language: ${chatRoom.language}'),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            InsideChatroomPage(chatRoom: chatRoom),
-                      ),
+
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                List<ChatRoom> chatRooms = snapshot.data!.docs.map((doc) {
+                  return ChatRoom.fromMap(doc.data() as Map<String, dynamic>);
+                }).toList();
+
+                if (_searchController.text.isNotEmpty) {
+                  chatRooms = chatRooms
+                      .where((chatRoom) => chatRoom.title
+                          .toLowerCase()
+                          .contains(_searchController.text.toLowerCase()))
+                      .toList();
+                }
+
+                return ListView.builder(
+                  itemCount: chatRooms.length,
+                  itemBuilder: (context, index) {
+                    final chatRoom = chatRooms[index];
+                    return ListTile(
+                      title: Text(chatRoom.title),
+                      subtitle: Text('Language: ${chatRoom.language}'),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                InsideChatroomPage(chatRoom: chatRoom),
+                          ),
+                        );
+                      },
                     );
                   },
                 );
               },
             ),
           ),
-          if (_isLoading) const CircularProgressIndicator(),
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _showCreateChatRoomModal,
-        child: const Icon(Icons.edit),
+        onPressed: () => _showCreateChatRoomModal(context),
+        child: const Icon(Icons.add),
       ),
     );
   }
