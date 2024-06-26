@@ -19,6 +19,7 @@ class _InsideChatroomPageState extends State<InsideChatroomPage> {
   final ScrollController _scrollController = ScrollController();
 
   final _auth = FirebaseAuth.instance;
+  final _auth = FirebaseAuth.instance;
 
   @override
   void initState() {
@@ -98,6 +99,8 @@ class _InsideChatroomPageState extends State<InsideChatroomPage> {
                   itemBuilder: (context, index) {
                     var message = messages[index];
                     String senderId = message['senderId'];
+                    bool isCurrentUser = _auth.currentUser?.uid != null &&
+                        senderId == _auth.currentUser?.uid;
                     bool isCurrentUser = _auth.currentUser?.uid != null &&
                         senderId == _auth.currentUser?.uid;
 
