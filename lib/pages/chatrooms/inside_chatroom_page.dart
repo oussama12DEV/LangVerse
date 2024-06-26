@@ -27,9 +27,10 @@ class _InsideChatroomPageState extends State<InsideChatroomPage> {
   }
 
   Future<void> attemptJoinChatRoom() async {
-    try {
-      await ChatroomsService.joinChatRoom(widget.chatRoom.id);
-    } catch (e) {
+    bool joinedSuccessfully =
+        await ChatroomsService.joinChatRoom(widget.chatRoom.id);
+    if (!joinedSuccessfully) {
+      dispose();
       Navigator.of(context).pop();
     }
   }
@@ -61,6 +62,7 @@ class _InsideChatroomPageState extends State<InsideChatroomPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.chatRoom.title),
+        centerTitle: true,
         actions: <Widget>[
           if (_auth.currentUser?.uid == widget.chatRoom.creatorId)
             IconButton(

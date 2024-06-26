@@ -1,18 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:langverse/services/auth_service.dart';
-import 'package:langverse/preferences/theme_provider.dart';
-import 'package:provider/provider.dart';
 
 class RegisterPage extends StatefulWidget {
-  const RegisterPage({super.key});
+  const RegisterPage({Key? key}) : super(key: key);
 
   @override
   _RegisterPageState createState() => _RegisterPageState();
 }
 
 class _RegisterPageState extends State<RegisterPage> {
-  DateTime? _selectedDate;
   final _formKey = GlobalKey<FormState>();
   final AuthService _auth = AuthService();
   String email = '';
@@ -22,11 +19,10 @@ class _RegisterPageState extends State<RegisterPage> {
   String dob = '';
   String gender = '';
   String preferredLanguage = '';
+  bool _showAdditionalFields = false;
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<DarkThemeProvider>(context);
-
     return Scaffold(
       body: Form(
         key: _formKey,
@@ -36,31 +32,16 @@ class _RegisterPageState extends State<RegisterPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
-              Image.asset(
-                themeProvider.darkTheme
-                    ? 'assets/images/logo_light.png'
-                    : 'assets/images/logo_dark.png',
-                width: 250,
-                height: 200,
-              ),
-              const Row(
-                children: [
-                  Text(
-                    'Sign Up',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 35,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(
-                height: 20,
-              ),
-              TextFormField(
-                decoration: const InputDecoration(
-                  labelText: 'Username',
+              const Text(
+                'Sign Up',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 35,
                 ),
+              ),
+              const SizedBox(height: 20),
+              TextFormField(
+                decoration: const InputDecoration(labelText: 'Username'),
                 validator: (val) => val!.isEmpty ? 'Enter a username' : null,
                 onChanged: (val) {
                   setState(() => username = val);
@@ -72,76 +53,6 @@ class _RegisterPageState extends State<RegisterPage> {
                 onChanged: (val) {
                   setState(() => email = val);
                 },
-              ),
-              TextFormField(
-                decoration: const InputDecoration(
-                  labelText: 'Date of Birth',
-                  suffixIcon: Icon(Icons.calendar_today),
-                ),
-                validator: (val) =>
-                    val!.isEmpty ? 'Select a Date of Birth' : null,
-                onChanged: (val) {
-                  setState(() => dob = val);
-                },
-                readOnly: true,
-                onTap: () async {
-                  DateTime? pickedDate = await showDatePicker(
-                    context: context,
-                    initialDate: DateTime.now(),
-                    firstDate: DateTime(1900),
-                    lastDate: DateTime(2025),
-                  );
-                  if (pickedDate != null) {
-                    setState(() {
-                      _selectedDate = pickedDate;
-                      dob =
-                          "${pickedDate.day}/${pickedDate.month}/${pickedDate.year}";
-                    });
-                  }
-                },
-                controller: TextEditingController(
-                  text: _selectedDate != null
-                      ? "${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}"
-                      : '',
-                ),
-              ),
-              DropdownButtonFormField<String>(
-                validator: (val) =>
-                    val!.isEmpty ? 'Selected Your Gender' : null,
-                onChanged: (newValue) {
-                  setState(() {
-                    gender = newValue!;
-                  });
-                },
-                items: <String>['Homme', 'Femme', 'Autre']
-                    .map<DropdownMenuItem<String>>((String value) {
-                  return DropdownMenuItem<String>(
-                    value: value,
-                    child: Text(value),
-                  );
-                }).toList(),
-                decoration: const InputDecoration(
-                  labelText: 'Sexe',
-                ),
-              ),
-              DropdownButtonFormField<String>(
-                validator: (val) =>
-                    val!.isEmpty ? 'Selected Your Perfect Language' : null,
-                onChanged: (newValue) {
-                  setState(() {
-                    preferredLanguage = newValue!;
-                  });
-                },
-                items: <String>['Français', 'Anglais', 'Espagnol']
-                    .map<DropdownMenuItem<String>>((String value) {
-                  return DropdownMenuItem<String>(
-                    value: value,
-                    child: Text(value),
-                  );
-                }).toList(),
-                decoration: const InputDecoration(
-                  labelText: 'Langue préférée',
-                ),
               ),
               TextFormField(
                 decoration: const InputDecoration(labelText: 'Password'),
@@ -166,26 +77,105 @@ class _RegisterPageState extends State<RegisterPage> {
                 },
                 obscureText: true,
               ),
+              if (_showAdditionalFields) ...[
+                const SizedBox(height: 20),
+                TextFormField(
+                  decoration: const InputDecoration(
+                      labelText: 'Date of Birth',
+                      suffixIcon: Icon(Icons.calendar_today)),
+                  validator: (val) =>
+                      val!.isEmpty ? 'Select a Date of Birth' : null,
+                  onChanged: (val) {
+                    setState(() => dob = val);
+                  },
+                  readOnly: true,
+                  onTap: () async {
+                    DateTime? pickedDate = await showDatePicker(
+                      context: context,
+                      initialDate: DateTime.now(),
+                      firstDate: DateTime(1900),
+                      lastDate: DateTime(2025),
+                    );
+                    if (pickedDate != null) {
+                      setState(() {
+                        dob =
+                            "${pickedDate.day}/${pickedDate.month}/${pickedDate.year}";
+                      });
+                    }
+                  },
+                  controller: TextEditingController(
+                    text: dob,
+                  ),
+                ),
+                DropdownButtonFormField<String>(
+                  validator: (val) =>
+                      val!.isEmpty ? 'Select Your Gender' : null,
+                  onChanged: (newValue) {
+                    setState(() {
+                      gender = newValue!;
+                    });
+                  },
+                  items: <String>['Male', 'Female', 'Other']
+                      .map<DropdownMenuItem<String>>((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value),
+                    );
+                  }).toList(),
+                  decoration: const InputDecoration(
+                    labelText: 'Gender',
+                  ),
+                ),
+                DropdownButtonFormField<String>(
+                  validator: (val) =>
+                      val!.isEmpty ? 'Select Your Preferred Language' : null,
+                  onChanged: (newValue) {
+                    setState(() {
+                      preferredLanguage = newValue!;
+                    });
+                  },
+                  items: <String>['French', 'English', 'Spanish']
+                      .map<DropdownMenuItem<String>>((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value),
+                    );
+                  }).toList(),
+                  decoration: const InputDecoration(
+                    labelText: 'Preferred Language',
+                  ),
+                ),
+              ],
               const SizedBox(height: 20),
               ElevatedButton(
-                  onPressed: () async {
+                onPressed: () async {
+                  if (!_showAdditionalFields) {
+                    if (_formKey.currentState!.validate()) {
+                      setState(() {
+                        _showAdditionalFields = true;
+                      });
+                    }
+                  } else {
                     if (_formKey.currentState!.validate()) {
                       dynamic result = await _auth.registerWithEmailPassword(
-                          email,
-                          password,
-                          username,
-                          dob,
-                          gender,
-                          preferredLanguage);
+                        email,
+                        password,
+                        username,
+                        dob,
+                        gender,
+                        preferredLanguage,
+                      );
                       if (result == null) {
-                        print('Could not sign in with those credentials');
+                        print('Could not sign up with those credentials');
                       } else {
-                        print('Signed in');
+                        print('Signed up successfully');
+                        // Navigate to home or another screen upon successful registration
                       }
                     }
-                    Navigator.pushReplacementNamed(context, '/login');
-                  },
-                  child: const Text("Sign Up")),
+                  }
+                },
+                child: Text(_showAdditionalFields ? 'Sign Up' : 'Next'),
+              ),
               const SizedBox(height: 20),
               const Row(
                 children: <Widget>[

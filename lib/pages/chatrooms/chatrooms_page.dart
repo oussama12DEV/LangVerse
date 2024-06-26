@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:langverse/models/Chatroom.dart';
 import 'package:langverse/services/chatrooms_service.dart';
+import 'package:langverse/widgets/chatroom_tile_widget.dart';
 import 'inside_chatroom_page.dart';
 import 'create_chatroom_modal.dart';
 
@@ -16,6 +18,9 @@ class _ChatroomsPageState extends State<ChatroomsPage> {
   DocumentSnapshot? _lastDocument;
   bool _isLoading = false;
   bool _hasMore = true;
+  String _selectedLanguage = 'All Languages';
+  String _selectedFilter = 'All Rooms';
+  final User? _currentUser = FirebaseAuth.instance.currentUser;
 
   @override
   void initState() {
@@ -75,6 +80,20 @@ class _ChatroomsPageState extends State<ChatroomsPage> {
         name: searchText,
       );
 
+      if (_selectedLanguage != 'All Languages') {
+        searchResults = searchResults
+            .where((chatRoom) =>
+                chatRoom.language.toLowerCase() ==
+                _selectedLanguage.toLowerCase())
+            .toList();
+      }
+
+      if (_selectedFilter == 'My Rooms') {
+        searchResults = searchResults
+            .where((chatRoom) => chatRoom.creatorId == _currentUser!.uid)
+            .toList();
+      }
+
       setState(() {
         _isLoading = false;
         _chatRooms = searchResults;
@@ -96,12 +115,52 @@ class _ChatroomsPageState extends State<ChatroomsPage> {
     );
   }
 
+  void _selectFilter(String filter) {
+    setState(() {
+      _selectedFilter = filter;
+    });
+    _searchChatRooms(_searchController.text.trim());
+  }
+
+  void _selectLanguage(String language) {
+    setState(() {
+      _selectedLanguage = language;
+    });
+    _searchChatRooms(_searchController.text.trim());
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Chatrooms'),
         centerTitle: true,
+        leading: _buildLeadingIcon(),
+        actions: [
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.language),
+            tooltip: 'Filter by language',
+            onSelected: _selectLanguage,
+            itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+              const PopupMenuItem<String>(
+                value: 'All Languages',
+                child: Text('All Languages'),
+              ),
+              const PopupMenuItem<String>(
+                value: 'English',
+                child: Text('English'),
+              ),
+              const PopupMenuItem<String>(
+                value: 'Spanish',
+                child: Text('Spanish'),
+              ),
+              const PopupMenuItem<String>(
+                value: 'French',
+                child: Text('French'),
+              ),
+            ],
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -110,7 +169,7 @@ class _ChatroomsPageState extends State<ChatroomsPage> {
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
-                hintText: 'Search for chatrooms...',
+                hintText: 'Search for chatrooms... (${_selectedLanguage})',
                 prefixIcon: const Icon(Icons.search),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10.0),
@@ -147,13 +206,27 @@ class _ChatroomsPageState extends State<ChatroomsPage> {
                       .toList();
                 }
 
+                if (_selectedLanguage != 'All Languages') {
+                  chatRooms = chatRooms
+                      .where((chatRoom) =>
+                          chatRoom.language.toLowerCase() ==
+                          _selectedLanguage.toLowerCase())
+                      .toList();
+                }
+
+                if (_selectedFilter == 'My Rooms') {
+                  chatRooms = chatRooms
+                      .where(
+                          (chatRoom) => chatRoom.creatorId == _currentUser!.uid)
+                      .toList();
+                }
+
                 return ListView.builder(
                   itemCount: chatRooms.length,
                   itemBuilder: (context, index) {
                     final chatRoom = chatRooms[index];
-                    return ListTile(
-                      title: Text(chatRoom.title),
-                      subtitle: Text('Language: ${chatRoom.language}'),
+                    return ChatRoomTile(
+                      chatRoom: chatRoom,
                       onTap: () {
                         Navigator.push(
                           context,
@@ -175,6 +248,26 @@ class _ChatroomsPageState extends State<ChatroomsPage> {
         onPressed: () => _showCreateChatRoomModal(context),
         child: const Icon(Icons.add),
       ),
+    );
+  }
+
+  Widget _buildLeadingIcon() {
+    IconData iconData;
+    if (_selectedFilter == 'My Rooms') {
+      iconData = Icons.person;
+    } else {
+      iconData = Icons.group;
+    }
+
+    return GestureDetector(
+      onTap: () {
+        if (_selectedFilter == 'My Rooms') {
+          _selectFilter('All Rooms');
+        } else {
+          _selectFilter('My Rooms');
+        }
+      },
+      child: Icon(iconData),
     );
   }
 }
