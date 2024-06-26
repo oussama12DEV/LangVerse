@@ -29,13 +29,8 @@ class AuthService {
   }
 
   // Register with email and password
-  Future<User?> registerWithEmailPassword(
-      String email,
-      String password,
-      String username,
-      String dob,
-      String gender,
-      String perfectlanguage) async {
+  Future<User?> registerWithEmailPassword(String email, String password,
+      String username, String dob, String gender, String nativeLanguage) async {
     try {
       UserCredential result = await _auth.createUserWithEmailAndPassword(
           email: email, password: password);
@@ -47,7 +42,7 @@ class AuthService {
         'email': email,
         'dateOfBirth': dob,
         'gender': gender,
-        'perfectlanguage': perfectlanguage,
+        'nativeLanguage': nativeLanguage,
       });
 
       return user;

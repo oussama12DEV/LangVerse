@@ -4,15 +4,16 @@ class ChatRoom {
   String title;
   String language;
   int userLimit;
-  List<String> currentUsers;
+  Set<String> currentUsers;
 
-  ChatRoom(
-      {required this.id,
-      required this.title,
-      required this.userLimit,
-      required this.language,
-      required this.creatorId,
-      required this.currentUsers});
+  ChatRoom({
+    required this.id,
+    required this.title,
+    required this.userLimit,
+    required this.language,
+    required this.creatorId,
+    required this.currentUsers,
+  });
 
   Map<String, dynamic> toMap() {
     return {
@@ -21,7 +22,7 @@ class ChatRoom {
       'userLimit': userLimit,
       'language': language,
       'creatorId': creatorId,
-      'currentUsers': currentUsers,
+      'currentUsers': currentUsers.toList(),
     };
   }
 
@@ -32,7 +33,9 @@ class ChatRoom {
       userLimit: map['userLimit'],
       language: map['language'],
       creatorId: map['creatorId'],
-      currentUsers: List<String>.from(map['currentUsers']),
+      currentUsers: map['currentUsers'] != null
+          ? Set<String>.from(map['currentUsers'])
+          : Set<String>(),
     );
   }
 }

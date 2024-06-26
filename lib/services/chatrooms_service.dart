@@ -22,12 +22,51 @@ class ChatroomsService {
         id: chatRoomRef.id,
         title: title,
         userLimit: userLimit,
-        currentUsers: [],
+        currentUsers: {}, // Initialize as empty set
         language: language,
         creatorId: user.uid,
       );
 
-      await chatRoomRef.set(chatRoom.toMap());
+      await chatRoomRef.set(chatRoom.toMap()); // Save chat room to Firestore
+    } catch (e) {
+      Fluttertoast.showToast(
+        msg: e.toString().replaceAll(RegExp(r'\[.*?\]'), '').trim(),
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.BOTTOM,
+        timeInSecForIosWeb: 3,
+        textColor: Colors.white,
+        fontSize: 16.0,
+      );
+    }
+  }
+
+  static Future<void> removeChatRoom(String chatRoomId) async {
+    try {
+      User? user = _auth.currentUser;
+      if (user == null) {
+        Fluttertoast.showToast(
+          msg: "User not logged in",
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.BOTTOM,
+          timeInSecForIosWeb: 3,
+          textColor: Colors.white,
+          fontSize: 16.0,
+        );
+        return;
+      }
+
+      final chatRoomRef =
+          FirebaseFirestore.instance.collection('chatrooms').doc(chatRoomId);
+      await chatRoomRef.delete(); // Remove the chatroom from Firestore
+
+      Fluttertoast.showToast(
+        msg: "Chatroom removed successfully",
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.BOTTOM,
+        timeInSecForIosWeb: 3,
+        textColor: Colors.white,
+        fontSize: 16.0,
+      );
     } catch (e) {
       Fluttertoast.showToast(
         msg: e.toString().replaceAll(RegExp(r'\[.*?\]'), '').trim(),
@@ -191,14 +230,13 @@ class ChatroomsService {
       if (currentUser == null) {
         throw Exception("No user logged in");
       }
-      String senderId = currentUser.uid; // Get the current user's ID
+      String senderId = currentUser.uid;
 
-      // Reference to the chatroom's messages collection
       final messageRef = FirebaseFirestore.instance
           .collection('chatrooms')
           .doc(chatRoomId)
           .collection('messages')
-          .doc(); // Auto-generate a message ID
+          .doc();
 
       Message message = Message(
         id: messageRef.id,
