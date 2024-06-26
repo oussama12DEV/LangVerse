@@ -20,10 +20,13 @@ class _RegisterPageState extends State<RegisterPage> {
   String confirmPassword = '';
   String username = '';
   String dob = '';
+  String gender = '';
+  String preferredLanguage = '';
 
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<DarkThemeProvider>(context);
+
     return Scaffold(
       body: Form(
         key: _formKey,
@@ -102,6 +105,44 @@ class _RegisterPageState extends State<RegisterPage> {
                       : '',
                 ),
               ),
+              DropdownButtonFormField<String>(
+                validator: (val) =>
+                    val!.isEmpty ? 'Selected Your Gender' : null,
+                onChanged: (newValue) {
+                  setState(() {
+                    gender = newValue!;
+                  });
+                },
+                items: <String>['Homme', 'Femme', 'Autre']
+                    .map<DropdownMenuItem<String>>((String value) {
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(value),
+                  );
+                }).toList(),
+                decoration: const InputDecoration(
+                  labelText: 'Sexe',
+                ),
+              ),
+              DropdownButtonFormField<String>(
+                validator: (val) =>
+                    val!.isEmpty ? 'Selected Your Perfect Language' : null,
+                onChanged: (newValue) {
+                  setState(() {
+                    preferredLanguage = newValue!;
+                  });
+                },
+                items: <String>['Français', 'Anglais', 'Espagnol']
+                    .map<DropdownMenuItem<String>>((String value) {
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(value),
+                  );
+                }).toList(),
+                decoration: const InputDecoration(
+                  labelText: 'Langue préférée',
+                ),
+              ),
               TextFormField(
                 decoration: const InputDecoration(labelText: 'Password'),
                 validator: (val) => val!.isEmpty ? 'Enter a password' : null,
@@ -130,7 +171,12 @@ class _RegisterPageState extends State<RegisterPage> {
                   onPressed: () async {
                     if (_formKey.currentState!.validate()) {
                       dynamic result = await _auth.registerWithEmailPassword(
-                          email, password, username, dob);
+                          email,
+                          password,
+                          username,
+                          dob,
+                          gender,
+                          preferredLanguage);
                       if (result == null) {
                         print('Could not sign in with those credentials');
                       } else {
