@@ -2,7 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:langverse/preferences/theme_provider.dart';
 import 'package:motion_tab_bar/MotionTabBar.dart';
 import 'package:motion_tab_bar/MotionTabBarController.dart';
+<<<<<<< HEAD
 import 'package:langverse/pages/chatrooms_page.dart';
+=======
+import 'package:langverse/pages/chatrooms/chatrooms_page.dart';
+>>>>>>> AhmedSahbaoui69-main
 import 'package:langverse/pages/home_page.dart';
 import 'package:langverse/pages/quizzes_page.dart';
 import 'package:provider/provider.dart';
