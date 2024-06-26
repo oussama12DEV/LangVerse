@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:langverse/pages/index_page.dart';
 import 'package:langverse/preferences/theme_provider.dart';
@@ -110,7 +109,6 @@ class _LoginPageState extends State<LoginPage> {
               const SizedBox(height: 20),
               InkWell(
                 onTap: () {
-                  // Handle the tap
                   Navigator.pushReplacementNamed(context, '/register');
                 },
                 child: const Text(
