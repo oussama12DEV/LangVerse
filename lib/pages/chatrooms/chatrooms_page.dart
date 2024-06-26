@@ -70,7 +70,6 @@ class _ChatroomsPageState extends State<ChatroomsPage> {
   }
 
   void _searchChatRooms(String searchText) async {
-  void _searchChatRooms(String searchText) async {
     setState(() {
       _isLoading = true;
       _hasMore = false;
@@ -109,7 +108,6 @@ class _ChatroomsPageState extends State<ChatroomsPage> {
     }
   }
 
-  void _showCreateChatRoomModal(BuildContext context) {
   void _showCreateChatRoomModal(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -175,11 +173,9 @@ class _ChatroomsPageState extends State<ChatroomsPage> {
                 prefixIcon: const Icon(Icons.search),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10.0),
-                  borderRadius: BorderRadius.circular(10.0),
                 ),
               ),
               onSubmitted: (value) {
-                _searchChatRooms(value.trim());
                 _searchChatRooms(value.trim());
               },
             ),
@@ -249,8 +245,6 @@ class _ChatroomsPageState extends State<ChatroomsPage> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showCreateChatRoomModal(context),
-        child: const Icon(Icons.add),
         onPressed: () => _showCreateChatRoomModal(context),
         child: const Icon(Icons.add),
       ),

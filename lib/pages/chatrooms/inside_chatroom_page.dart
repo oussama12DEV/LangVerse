@@ -17,8 +17,6 @@ class InsideChatroomPage extends StatefulWidget {
 class _InsideChatroomPageState extends State<InsideChatroomPage> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-
-  final _auth = FirebaseAuth.instance;
   final _auth = FirebaseAuth.instance;
 
   @override
@@ -99,10 +97,7 @@ class _InsideChatroomPageState extends State<InsideChatroomPage> {
                   itemBuilder: (context, index) {
                     var message = messages[index];
                     String senderId = message['senderId'];
-                    bool isCurrentUser = _auth.currentUser?.uid != null &&
-                        senderId == _auth.currentUser?.uid;
-                    bool isCurrentUser = _auth.currentUser?.uid != null &&
-                        senderId == _auth.currentUser?.uid;
+                    bool isCurrentUser = _auth.currentUser?.uid == senderId;
 
                     return MessageBubble(
                       text: message['text'],
