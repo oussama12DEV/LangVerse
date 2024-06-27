@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:langverse/pages/settings_page.dart';
+import 'package:langverse/pages/settings/settings_page.dart';
 
 class HomePage extends StatelessWidget {
   @override

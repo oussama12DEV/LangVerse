@@ -4,7 +4,7 @@ import 'package:motion_tab_bar/MotionTabBar.dart';
 import 'package:motion_tab_bar/MotionTabBarController.dart';
 import 'package:langverse/pages/chatrooms/chatrooms_page.dart';
 import 'package:langverse/pages/home_page.dart';
-import 'package:langverse/pages/quizzes_page.dart';
+import 'package:langverse/pages/quiz/quizzes_page.dart';
 import 'package:provider/provider.dart';
 
 class IndexPage extends StatefulWidget {
