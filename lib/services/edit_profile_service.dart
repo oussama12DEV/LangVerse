@@ -29,4 +29,8 @@ class UserService {
       fontSize: 16.0,
     );
   }
+
+  getUserProgress(String userId) {
+    return _db.collection('users').doc(userId).get();
+  }
 }

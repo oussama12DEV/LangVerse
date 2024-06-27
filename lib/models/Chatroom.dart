@@ -15,6 +15,8 @@ class ChatRoom {
     required this.currentUsers,
   });
 
+  get documentSnapshot => null;
+
   Map<String, dynamic> toMap() {
     return {
       'id': id,
