@@ -1,141 +1,234 @@
-import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:langverse/models/Question.dart';
 
 class QuizService {
-  FirebaseFirestore firestore = FirebaseFirestore.instance;
-  StreamController<void> _cancelSearchController =
-      StreamController<void>.broadcast();
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  Future<String> findOpponent(String userId, String language, String level,
-      String category, BuildContext context) async {
-    Completer<String> completer = Completer<String>();
-
-    _startSearching(userId, language, level, category, completer, context);
-
-    return completer.future;
-  }
-
-  void _startSearching(
-      String userId,
-      String language,
-      String level,
-      String category,
-      Completer<String> completer,
-      BuildContext context) async {
-    bool isCanceled = false;
-
-    // Listen for cancel events
-    _cancelSearchController.stream.listen((_) async {
-      if (!completer.isCompleted) {
-        completer.completeError('Search canceled');
-      }
-      await _deleteQuizRequest(userId);
-    });
-
+  // Create a new quiz request
+  Future<String> createQuizRequest(
+      String language, String level, String category) async {
     try {
-      // Create initial quiz request if it doesn't exist
-      await _createQuizRequest(userId, language, level, category);
-
-      // Start searching for opponent periodically
-      Timer.periodic(Duration(seconds: 1), (timer) async {
-        if (completer.isCompleted || isCanceled) {
-          timer.cancel();
-          return;
-        }
-
-        try {
-          CollectionReference quizRequestsRef =
-              firestore.collection('quiz_requests');
-          QuerySnapshot snapshot = await quizRequestsRef
-              .where('userId', isNotEqualTo: userId)
-              .where('language', isEqualTo: language)
-              .where('level', isEqualTo: level)
-              .where('category', isEqualTo: category)
-              .orderBy('timestamp', descending: true)
-              .limit(1)
-              .get();
-
-          if (snapshot.docs.isNotEmpty) {
-            String opponentId = snapshot.docs.first['userId'];
-
-            await _deleteQuizRequest(userId);
-            await _deleteQuizRequest(opponentId);
-
-            await _createQuizDuel(
-                userId, opponentId, language, level, category);
-
-            if (!completer.isCompleted) {
-              completer.complete(opponentId);
-              // Navigate to quiz duel screen
-              Navigator.pushNamed(context, '/quiz_duel/$userId-$opponentId');
-            }
-            timer.cancel();
-          }
-        } catch (e) {
-          if (!completer.isCompleted) {
-            completer.completeError('Failed to find opponent: $e');
-          }
-          timer.cancel();
-        }
-      });
-    } catch (e) {
-      if (!completer.isCompleted) {
-        completer.completeError('Failed to start searching: $e');
-      }
-    }
-  }
-
-  void cancelSearch(String userId) async {
-    _cancelSearchController.add(null);
-    await _deleteQuizRequest(userId);
-  }
-
-  Future<void> _createQuizRequest(
-      String userId, String language, String level, String category) async {
-    try {
-      await firestore.collection('quiz_requests').doc(userId).set({
-        'userId': userId,
+      DocumentReference docRef =
+          await _firestore.collection('quiz_requests').add({
+        'userId': FirebaseAuth.instance.currentUser!.uid,
         'language': language,
         'level': level,
         'category': category,
-        'timestamp': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
-      print('Quiz request created for $userId');
+      });
+      return docRef.id;
     } catch (e) {
-      print('Failed to create quiz request: $e');
+      print('Error creating quiz request: $e');
+      rethrow;
     }
   }
 
-  Future<void> _deleteQuizRequest(String userId) async {
+  // Cancel a quiz request
+  Future<void> cancelQuizRequest() async {
     try {
-      await firestore.collection('quiz_requests').doc(userId).delete();
-      print('Deleted quiz request for $userId');
+      QuerySnapshot querySnapshot = await _firestore
+          .collection('quiz_requests')
+          .where('userId', isEqualTo: FirebaseAuth.instance.currentUser!.uid)
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        await querySnapshot.docs.first.reference.delete();
+      }
     } catch (e) {
-      print('Failed to delete quiz request: $e');
+      print('Error canceling quiz request: $e');
+      rethrow;
     }
   }
 
-  Future<void> _createQuizDuel(String user1Id, String user2Id, String language,
+  // Find a matching quiz request (returns quiz duel ID if found)
+  Future<String> findMatchingQuizRequest(String quizRequestId, String language,
       String level, String category) async {
     try {
-      DocumentReference duelDocRef = firestore.collection('quiz_duels').doc();
-      await duelDocRef.set({
-        'user1Id': user1Id,
-        'user2Id': user2Id,
+      // Check if current user is already in an active duel
+      String? existingDuelId = await _getActiveDuelId();
+      if (existingDuelId != null) {
+        return existingDuelId;
+      }
+
+      // Fetch potential opponents' requests
+      QuerySnapshot querySnapshot = await _firestore
+          .collection('quiz_requests')
+          .where('userId', isNotEqualTo: FirebaseAuth.instance.currentUser!.uid)
+          .where('language', isEqualTo: language)
+          .where('level', isEqualTo: level)
+          .where('category', isEqualTo: category)
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        // Attempt to create a new quiz duel in a transaction
+        String opponentRequestId = querySnapshot.docs.first.id;
+        String opponentUserId = querySnapshot.docs.first.get('userId');
+        await _deleteQuizRequests(quizRequestId, opponentRequestId);
+        String quizDuelId = await _createQuizDuel(
+            FirebaseAuth.instance.currentUser!.uid,
+            opponentUserId,
+            language,
+            level,
+            category);
+        return quizDuelId;
+      }
+
+      return '';
+    } catch (e) {
+      print('Error finding matching quiz request: $e');
+      rethrow;
+    }
+  }
+
+  // Abandon a duel by updating the abandoned field
+  Future<void> abandonDuel(String duelId) async {
+    try {
+      String currentUserId = FirebaseAuth.instance.currentUser!.uid;
+      await _firestore.collection('quiz_duels').doc(duelId).update({
+        'active': false,
+        'abandoned': currentUserId,
+      });
+    } catch (e) {
+      print('Error abandoning duel: $e');
+      rethrow;
+    }
+  }
+
+  // Mark the current user as ready by updating the started field
+  Future<void> markUserAsReady(String duelId, bool isUser1) async {
+    try {
+      String field = isUser1 ? 'user1Started' : 'user2Started';
+      await _firestore.collection('quiz_duels').doc(duelId).update({
+        field: true,
+      });
+
+      DocumentSnapshot duelSnapshot =
+          await _firestore.collection('quiz_duels').doc(duelId).get();
+      bool user1Started = duelSnapshot.get('user1Started');
+      bool user2Started = duelSnapshot.get('user2Started');
+
+      if (user1Started && user2Started) {
+        await _startDuel(duelId, duelSnapshot.get('language'),
+            duelSnapshot.get('level'), duelSnapshot.get('category'));
+      }
+    } catch (e) {
+      print('Error marking user as ready: $e');
+      rethrow;
+    }
+  }
+
+  // Start the duel by adding the first question and setting the start time
+  Future<void> _startDuel(
+      String duelId, String language, String level, String category) async {
+    try {
+      // Fetch a random question based on the duel parameters
+      QuerySnapshot questionSnapshot = await _firestore
+          .collection('quizzes')
+          .doc(language)
+          .collection(level)
+          .doc(category)
+          .collection('questions')
+          .get();
+
+      if (questionSnapshot.docs.isNotEmpty) {
+        DocumentSnapshot questionDoc = questionSnapshot.docs.first;
+        Question question =
+            Question.fromMap(questionDoc.data() as Map<String, dynamic>);
+
+        await _firestore
+            .collection('quiz_duels')
+            .doc(duelId)
+            .collection('questions')
+            .add(question.toMap());
+        await _firestore.collection('quiz_duels').doc(duelId).update({
+          'startTime': FieldValue.serverTimestamp(),
+        });
+      }
+    } catch (e) {
+      print('Error starting duel: $e');
+      rethrow;
+    }
+  }
+
+  // Helper function to get the active duel ID for the current user
+  Future<String?> _getActiveDuelId() async {
+    try {
+      String currentUserId = FirebaseAuth.instance.currentUser!.uid;
+
+      QuerySnapshot activeDuelSnapshot1 = await _firestore
+          .collection('quiz_duels')
+          .where('active', isEqualTo: true)
+          .where('userId1', isEqualTo: currentUserId)
+          .get();
+
+      if (activeDuelSnapshot1.docs.isNotEmpty) {
+        return activeDuelSnapshot1.docs.first.id;
+      }
+
+      QuerySnapshot activeDuelSnapshot2 = await _firestore
+          .collection('quiz_duels')
+          .where('active', isEqualTo: true)
+          .where('userId2', isEqualTo: currentUserId)
+          .get();
+
+      if (activeDuelSnapshot2.docs.isNotEmpty) {
+        return activeDuelSnapshot2.docs.first.id;
+      }
+
+      return null;
+    } catch (e) {
+      print('Error getting active duel ID: $e');
+      rethrow;
+    }
+  }
+
+  // Helper function to delete quiz requests
+  Future<void> _deleteQuizRequests(
+      String quizRequestId1, String quizRequestId2) async {
+    try {
+      WriteBatch batch = _firestore.batch();
+      batch.delete(_firestore.collection('quiz_requests').doc(quizRequestId1));
+      batch.delete(_firestore.collection('quiz_requests').doc(quizRequestId2));
+      await batch.commit();
+    } catch (e) {
+      print('Error deleting quiz requests: $e');
+      rethrow;
+    }
+  }
+
+  // Helper function to create a quiz duel
+  Future<String> _createQuizDuel(String currentUserId, String opponentUserId,
+      String language, String level, String category) async {
+    try {
+      // Use batched writes for atomicity
+      WriteBatch batch = _firestore.batch();
+
+      // Create a new quiz duel in Firestore
+      DocumentReference quizDuelRef = _firestore.collection('quiz_duels').doc();
+
+      batch.set(quizDuelRef, {
+        'userId1': currentUserId,
+        'userId2': opponentUserId,
+        'score1': 0,
+        'score2': 0,
+        'numRounds': 5,
+        'currentRound': 0,
+        'active': true,
+        'abandoned': null, // Initially, no user has abandoned the duel
+        'user1Started': false,
+        'user2Started': false,
         'language': language,
         'level': level,
         'category': category,
-        'currentRound': 1,
-        'totalRounds': 5,
-        'scores': {
-          user1Id: 0,
-          user2Id: 0,
-        },
       });
-      print('Quiz duel created between $user1Id and $user2Id');
+
+      // Commit the batched writes
+      await batch.commit();
+
+      return quizDuelRef.id;
     } catch (e) {
-      print('Failed to create quiz duel: $e');
+      print('Error creating quiz duel: $e');
+      rethrow;
     }
   }
 }

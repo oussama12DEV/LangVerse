@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:langverse/pages/quiz/quiz_duel_page.dart';
 import 'package:langverse/services/quiz_service.dart';
 
 class QuizzesPage extends StatefulWidget {
@@ -12,7 +12,6 @@ class _QuizzesPageState extends State<QuizzesPage> {
   String selectedLanguage = 'English';
   String selectedLevel = 'Beginner';
   String selectedCategory = 'Vocabulary';
-  bool isSearching = false;
   bool isLoading = false;
 
   @override
@@ -120,118 +119,104 @@ class _QuizzesPageState extends State<QuizzesPage> {
     );
   }
 
-  void _handleFindOpponent(BuildContext context) async {
+  Future<void> _handleFindOpponent(BuildContext context) async {
     setState(() {
-      isSearching = true;
       isLoading = true;
     });
 
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return Dialog(
-              child: Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const CircularProgressIndicator(),
-                    SizedBox(height: 20),
-                    Text("Searching for opponent..."),
-                    SizedBox(height: 20),
-                    ElevatedButton(
-                      onPressed: () {
-                        _cancelSearch(context);
-                      },
-                      child: Text("Cancel Search"),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-
-    await _searchForOpponent(context);
-  }
-
-  Future<void> _searchForOpponent(BuildContext context) async {
-    if (!isSearching) return;
-
-    String language = selectedLanguage;
-    String level = selectedLevel;
-    String category = selectedCategory;
-
     try {
-      User? currentUser = FirebaseAuth.instance.currentUser;
-      if (currentUser == null) {
-        throw Exception('User not authenticated');
+      // Create quiz request in Firestore
+      String quizRequestId = await quizService.createQuizRequest(
+        selectedLanguage,
+        selectedLevel,
+        selectedCategory,
+      );
+
+      // Show searching dialog
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            content: Row(
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(width: 20),
+                Text("Searching for opponent..."),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  _cancelSearch();
+                  Navigator.of(context).pop();
+                },
+                child: Text('Cancel'),
+              ),
+            ],
+          );
+        },
+      );
+
+      // Poll Firestore for matching quiz request
+      String quizDuelId = await _pollForMatch(quizRequestId);
+
+      // Dismiss searching dialog
+      Navigator.of(context).pop();
+
+      if (quizDuelId.isNotEmpty) {
+        // Navigate to duel screen upon successful match
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => DuelPage(duelId: quizDuelId),
+          ),
+        );
+      } else {
+        // Handle case where no match was found
+
+        print('No match found!');
+        // Optionally show a message to the user
       }
-      String userId = currentUser.uid;
-
-      String opponentId = await quizService.findOpponent(
-          userId, language, level, category, context);
-
-      if (!isSearching) return;
-
-      if (opponentId.isNotEmpty) {
-        Navigator.pop(context);
-        Navigator.pushNamed(context,
-            '/duel/$opponentId'); // Navigate to duel page with opponentId
-        setState(() {
-          isSearching = false;
-          isLoading = false;
-        });
-        return;
-      }
-
-      await Future.delayed(Duration(seconds: 1));
-      await _searchForOpponent(context);
     } catch (e) {
-      if (isSearching) {
-        print("Error finding opponent: $e");
-        Navigator.pop(context);
-        _showAlertDialog(context, "Error",
-            "Failed to find opponent. Please try again later.");
-        setState(() {
-          isSearching = false;
-          isLoading = false;
-        });
-      }
+      print('Error handling find opponent: $e');
+      // Handle error gracefully, e.g., show an error message to the user
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 
-  void _cancelSearch(BuildContext context) {
-    setState(() {
-      isSearching = false;
-      isLoading = false;
-    });
-    quizService.cancelSearch(FirebaseAuth.instance.currentUser!.uid);
-    Navigator.pop(context);
+  Future<String> _pollForMatch(String quizRequestId) async {
+    const int pollInterval = 1000; // 1 second
+    String quizDuelId = '';
+
+    while (quizDuelId.isEmpty) {
+      // Poll Firestore to check for matching quiz request
+      quizDuelId = await quizService.findMatchingQuizRequest(
+        quizRequestId,
+        selectedLanguage,
+        selectedLevel,
+        selectedCategory,
+      );
+
+      if (quizDuelId.isNotEmpty) {
+        break;
+      }
+
+      // Wait for next poll interval
+      await Future.delayed(Duration(milliseconds: pollInterval));
+    }
+
+    return quizDuelId;
   }
 
-  void _showAlertDialog(BuildContext context, String title, String content) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(title),
-          content: Text(content),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: Text("OK"),
-            ),
-          ],
-        );
-      },
-    );
+  void _cancelSearch() {
+    // Implement logic to cancel search and delete current user's quiz request
+    quizService.cancelQuizRequest();
+    setState(() {
+      isLoading = false;
+    });
   }
 }

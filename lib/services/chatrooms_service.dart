@@ -8,6 +8,7 @@ import 'package:langverse/models/Message.dart';
 class ChatroomsService {
   static final FirebaseAuth _auth = FirebaseAuth.instance;
 
+  // Create a chat room
   static Future<void> createChatRoom(
       String title, int userLimit, String language) async {
     try {
@@ -27,7 +28,7 @@ class ChatroomsService {
         creatorId: user.uid,
       );
 
-      await chatRoomRef.set(chatRoom.toMap()); // Save chat room to Firestore
+      await chatRoomRef.set(chatRoom.toMap());
     } catch (e) {
       Fluttertoast.showToast(
         msg: e.toString().replaceAll(RegExp(r'\[.*?\]'), '').trim(),
@@ -40,6 +41,7 @@ class ChatroomsService {
     }
   }
 
+  // Remove a chat room by ID
   static Future<void> removeChatRoom(String chatRoomId) async {
     try {
       User? user = _auth.currentUser;
@@ -79,6 +81,7 @@ class ChatroomsService {
     }
   }
 
+  // Join a chat room by ID
   static Future<bool> joinChatRoom(String chatRoomId) async {
     String? userId = _auth.currentUser?.uid;
     if (userId == null) {
