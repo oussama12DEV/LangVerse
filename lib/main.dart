@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:langverse/firebase_options.dart';
+import 'package:langverse/pages/opponent_search_page.dart';
 import 'package:langverse/preferences/theme.dart';
 import 'package:langverse/preferences/util.dart';
 import 'package:langverse/preferences/theme_provider.dart';
@@ -67,6 +68,7 @@ class Langverse extends StatelessWidget {
         '/register': (context) =>
             _routeWrapper(child: RegisterPage(), requireAuth: false),
         '/index': (context) => _routeWrapper(child: IndexPage()),
+        '/opponent-search': (context) => OpponentSearchPage(),
       },
     );
   }
