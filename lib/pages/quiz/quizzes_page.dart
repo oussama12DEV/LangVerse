@@ -2,8 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:langverse/services/quiz_service.dart';
 
-class QuizzesPage extends StatelessWidget {
-  final QuizService quizService = QuizService(); // Initialize QuizService
+class QuizzesPage extends StatefulWidget {
+  @override
+  _QuizzesPageState createState() => _QuizzesPageState();
+}
+
+class _QuizzesPageState extends State<QuizzesPage> {
+  final QuizService quizService = QuizService();
+  String selectedLanguage = 'English';
+  String selectedLevel = 'Beginner';
+  String selectedCategory = 'Vocabulary';
+  bool isSearching = false;
+  bool isLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -29,9 +39,7 @@ class QuizzesPage extends StatelessWidget {
             _buildCategoryDropdown(),
             const SizedBox(height: 20),
             ElevatedButton(
-              onPressed: () {
-                _handleFindOpponent(context);
-              },
+              onPressed: isLoading ? null : () => _handleFindOpponent(context),
               child: const Text('Search for Opponent'),
             ),
           ],
@@ -41,15 +49,16 @@ class QuizzesPage extends StatelessWidget {
   }
 
   Widget _buildLanguageDropdown() {
-    // Replace with your language options
     List<String> languages = ['English', 'Spanish', 'French'];
-    String selectedLanguage = languages.first; // Default selection
-
     return DropdownButtonFormField<String>(
       value: selectedLanguage,
-      onChanged: (value) {
-        selectedLanguage = value!;
-      },
+      onChanged: isLoading
+          ? null
+          : (value) {
+              setState(() {
+                selectedLanguage = value!;
+              });
+            },
       items: languages.map((lang) {
         return DropdownMenuItem<String>(
           value: lang,
@@ -64,15 +73,16 @@ class QuizzesPage extends StatelessWidget {
   }
 
   Widget _buildLevelDropdown() {
-    // Replace with your level options
     List<String> levels = ['Beginner', 'Intermediate', 'Advanced'];
-    String selectedLevel = levels.first; // Default selection
-
     return DropdownButtonFormField<String>(
       value: selectedLevel,
-      onChanged: (value) {
-        selectedLevel = value!;
-      },
+      onChanged: isLoading
+          ? null
+          : (value) {
+              setState(() {
+                selectedLevel = value!;
+              });
+            },
       items: levels.map((level) {
         return DropdownMenuItem<String>(
           value: level,
@@ -87,15 +97,16 @@ class QuizzesPage extends StatelessWidget {
   }
 
   Widget _buildCategoryDropdown() {
-    // Replace with your category options
     List<String> categories = ['Vocabulary', 'Grammar', 'Conjugation'];
-    String selectedCategory = categories.first; // Default selection
-
     return DropdownButtonFormField<String>(
       value: selectedCategory,
-      onChanged: (value) {
-        selectedCategory = value!;
-      },
+      onChanged: isLoading
+          ? null
+          : (value) {
+              setState(() {
+                selectedCategory = value!;
+              });
+            },
       items: categories.map((category) {
         return DropdownMenuItem<String>(
           value: category,
@@ -110,90 +121,117 @@ class QuizzesPage extends StatelessWidget {
   }
 
   void _handleFindOpponent(BuildContext context) async {
-    // Show loading indicator while searching for opponent
+    setState(() {
+      isSearching = true;
+      isLoading = true;
+    });
+
     showDialog(
       context: context,
-      barrierDismissible: false, // Prevent dialog from closing on outside tap
+      barrierDismissible: false,
       builder: (BuildContext context) {
-        return Dialog(
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                CircularProgressIndicator(),
-                SizedBox(width: 20),
-                Text("Searching for opponent..."),
-              ],
-            ),
-          ),
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return Dialog(
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const CircularProgressIndicator(),
+                    SizedBox(height: 20),
+                    Text("Searching for opponent..."),
+                    SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: () {
+                        _cancelSearch(context);
+                      },
+                      child: Text("Cancel Search"),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
         );
       },
     );
 
-    // Get selected quiz parameters
-    String language = 'English'; // Replace with actual selected value
-    String level = 'Beginner'; // Replace with actual selected value
-    String category = 'Vocabulary'; // Replace with actual selected value
+    await _searchForOpponent(context);
+  }
+
+  Future<void> _searchForOpponent(BuildContext context) async {
+    if (!isSearching) return;
+
+    String language = selectedLanguage;
+    String level = selectedLevel;
+    String category = selectedCategory;
 
     try {
-      // Get current user ID
       User? currentUser = FirebaseAuth.instance.currentUser;
       if (currentUser == null) {
         throw Exception('User not authenticated');
       }
       String userId = currentUser.uid;
 
-      // Call findOpponent method from QuizService
-      String opponentId =
-          await quizService.findOpponent(userId, language, level, category);
+      String opponentId = await quizService.findOpponent(
+          userId, language, level, category, context);
 
-      // Navigate to opponent screen or handle match success
-      Navigator.pop(context); // Close loading dialog
+      if (!isSearching) return;
+
       if (opponentId.isNotEmpty) {
-        // Navigate to opponent screen or handle match success
-        Navigator.pushNamed(context, '/opponent-screen', arguments: opponentId);
-      } else {
-        // Handle no opponent found scenario
-        showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              title: Text("No opponent found"),
-              content: Text("Please try again later."),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(context); // Close dialog
-                  },
-                  child: Text("OK"),
-                ),
-              ],
-            );
-          },
-        );
+        Navigator.pop(context);
+        Navigator.pushNamed(context,
+            '/duel/$opponentId'); // Navigate to duel page with opponentId
+        setState(() {
+          isSearching = false;
+          isLoading = false;
+        });
+        return;
       }
+
+      await Future.delayed(Duration(seconds: 1));
+      await _searchForOpponent(context);
     } catch (e) {
-      print("Error finding opponent: $e");
-      // Handle error scenario
-      Navigator.pop(context); // Close loading dialog
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text("Error"),
-            content: Text("Failed to find opponent. Please try again later."),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context); // Close dialog
-                },
-                child: Text("OK"),
-              ),
-            ],
-          );
-        },
-      );
+      if (isSearching) {
+        print("Error finding opponent: $e");
+        Navigator.pop(context);
+        _showAlertDialog(context, "Error",
+            "Failed to find opponent. Please try again later.");
+        setState(() {
+          isSearching = false;
+          isLoading = false;
+        });
+      }
     }
+  }
+
+  void _cancelSearch(BuildContext context) {
+    setState(() {
+      isSearching = false;
+      isLoading = false;
+    });
+    quizService.cancelSearch(FirebaseAuth.instance.currentUser!.uid);
+    Navigator.pop(context);
+  }
+
+  void _showAlertDialog(BuildContext context, String title, String content) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(title),
+          content: Text(content),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text("OK"),
+            ),
+          ],
+        );
+      },
+    );
   }
 }
