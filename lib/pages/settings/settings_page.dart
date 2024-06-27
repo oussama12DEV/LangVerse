@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:langverse/pages/SettingsPages/EditProfilePage.dart';
+import 'package:langverse/pages/settings/EditProfilePage.dart';
 import 'package:langverse/services/auth_service.dart';
 import 'package:provider/provider.dart';
 import 'package:langverse/preferences/theme_provider.dart';
-import 'package:langverse/pages/SettingsPages/ChangePassword.dart';
+import 'package:langverse/pages/settings/ChangePassword.dart';
 
 class SettingsPage extends StatelessWidget {
   @override

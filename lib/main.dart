@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:langverse/firebase_options.dart';
-import 'package:langverse/pages/opponent_search_page.dart';
+import 'package:langverse/pages/quiz/opponent_search_page.dart';
+import 'package:langverse/pages/quiz/quiz_duel_page.dart';
 import 'package:langverse/preferences/theme.dart';
 import 'package:langverse/preferences/util.dart';
 import 'package:langverse/preferences/theme_provider.dart';
 import 'package:provider/provider.dart';
-import 'pages/login_page.dart';
-import 'pages/register_page.dart';
+import 'pages/auth/login_page.dart';
+import 'pages/auth/register_page.dart';
 import 'pages/index_page.dart';
 
 void main() async {
@@ -69,6 +70,7 @@ class Langverse extends StatelessWidget {
             _routeWrapper(child: RegisterPage(), requireAuth: false),
         '/index': (context) => _routeWrapper(child: IndexPage()),
         '/opponent-search': (context) => OpponentSearchPage(),
+        '/duel/:id': (context) => DuelPage(),
       },
     );
   }

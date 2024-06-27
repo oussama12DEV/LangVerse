@@ -1,89 +1,124 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 
 class QuizService {
   FirebaseFirestore firestore = FirebaseFirestore.instance;
+  StreamController<void> _cancelSearchController =
+      StreamController<void>.broadcast();
 
-  Future<String> findOpponent(
-      String userId, String language, String level, String category) async {
+  Future<String> findOpponent(String userId, String language, String level,
+      String category, BuildContext context) async {
     Completer<String> completer = Completer<String>();
 
-    Timer timeout = Timer(Duration(seconds: 10), () {
+    _startSearching(userId, language, level, category, completer, context);
+
+    return completer.future;
+  }
+
+  void _startSearching(
+      String userId,
+      String language,
+      String level,
+      String category,
+      Completer<String> completer,
+      BuildContext context) async {
+    bool isCanceled = false;
+
+    // Listen for cancel events
+    _cancelSearchController.stream.listen((_) async {
       if (!completer.isCompleted) {
-        completer.completeError('Opponent search timed out');
+        completer.completeError('Search canceled');
       }
+      await _deleteQuizRequest(userId);
     });
 
     try {
-      CollectionReference quizRequestsRef =
-          firestore.collection('quiz_requests');
-      QuerySnapshot snapshot = await quizRequestsRef
-          .where('userId', isNotEqualTo: userId)
-          .where('language', isEqualTo: language)
-          .where('level', isEqualTo: level)
-          .where('category', isEqualTo: category)
-          .orderBy('timestamp', descending: true)
-          .limit(1)
-          .get();
+      // Create initial quiz request if it doesn't exist
+      await _createQuizRequest(userId, language, level, category);
 
-      if (snapshot.docs.isNotEmpty) {
-        String opponentId = snapshot.docs.first['userId'];
+      // Start searching for opponent periodically
+      Timer.periodic(Duration(seconds: 1), (timer) async {
+        if (completer.isCompleted || isCanceled) {
+          timer.cancel();
+          return;
+        }
 
-        await _deleteQuizRequest(userId);
-        await _deleteQuizRequest(opponentId);
+        try {
+          CollectionReference quizRequestsRef =
+              firestore.collection('quiz_requests');
+          QuerySnapshot snapshot = await quizRequestsRef
+              .where('userId', isNotEqualTo: userId)
+              .where('language', isEqualTo: language)
+              .where('level', isEqualTo: level)
+              .where('category', isEqualTo: category)
+              .orderBy('timestamp', descending: true)
+              .limit(1)
+              .get();
 
-        await _createQuizDuel(userId, opponentId, language, level, category);
+          if (snapshot.docs.isNotEmpty) {
+            String opponentId = snapshot.docs.first['userId'];
 
-        completer.complete(opponentId);
-      } else {
-        await _createQuizRequest(userId, language, level, category);
-      }
+            await _deleteQuizRequest(userId);
+            await _deleteQuizRequest(opponentId);
+
+            await _createQuizDuel(
+                userId, opponentId, language, level, category);
+
+            if (!completer.isCompleted) {
+              completer.complete(opponentId);
+              // Navigate to quiz duel screen
+              Navigator.pushNamed(context, '/quiz_duel/$userId-$opponentId');
+            }
+            timer.cancel();
+          }
+        } catch (e) {
+          if (!completer.isCompleted) {
+            completer.completeError('Failed to find opponent: $e');
+          }
+          timer.cancel();
+        }
+      });
     } catch (e) {
-      completer.completeError('Failed to find opponent: $e');
+      if (!completer.isCompleted) {
+        completer.completeError('Failed to start searching: $e');
+      }
     }
+  }
 
-    return completer.future;
+  void cancelSearch(String userId) async {
+    _cancelSearchController.add(null);
+    await _deleteQuizRequest(userId);
   }
 
   Future<void> _createQuizRequest(
       String userId, String language, String level, String category) async {
     try {
-      // Create a new quiz request document
-      await firestore.collection('quiz_requests').add({
+      await firestore.collection('quiz_requests').doc(userId).set({
         'userId': userId,
         'language': language,
         'level': level,
         'category': category,
         'timestamp': FieldValue.serverTimestamp(),
-      });
+      }, SetOptions(merge: true));
       print('Quiz request created for $userId');
     } catch (e) {
       print('Failed to create quiz request: $e');
-      // Handle error if needed
     }
   }
 
   Future<void> _deleteQuizRequest(String userId) async {
     try {
-      // Delete the quiz request document for the specified user
-      QuerySnapshot snapshot = await firestore
-          .collection('quiz_requests')
-          .where('userId', isEqualTo: userId)
-          .get();
-      snapshot.docs.forEach((doc) async {
-        await doc.reference.delete();
-      });
+      await firestore.collection('quiz_requests').doc(userId).delete();
       print('Deleted quiz request for $userId');
     } catch (e) {
       print('Failed to delete quiz request: $e');
-      // Handle error if needed
     }
   }
 
   Future<void> _createQuizDuel(String user1Id, String user2Id, String language,
       String level, String category) async {
     try {
-      // Create a new quiz duel document
       DocumentReference duelDocRef = firestore.collection('quiz_duels').doc();
       await duelDocRef.set({
         'user1Id': user1Id,
@@ -92,7 +127,7 @@ class QuizService {
         'level': level,
         'category': category,
         'currentRound': 1,
-        'totalRounds': 5, // Example: 5 rounds per quiz duel
+        'totalRounds': 5,
         'scores': {
           user1Id: 0,
           user2Id: 0,
@@ -101,7 +136,6 @@ class QuizService {
       print('Quiz duel created between $user1Id and $user2Id');
     } catch (e) {
       print('Failed to create quiz duel: $e');
-      // Handle error if needed
     }
   }
 }
