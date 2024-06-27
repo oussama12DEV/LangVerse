@@ -24,20 +24,6 @@ void main() async {
 }
 
 class Langverse extends StatelessWidget {
-  Widget _routeWrapper({required Widget child, bool requireAuth = true}) {
-    return Builder(
-      builder: (context) {
-        final user = FirebaseAuth.instance.currentUser;
-        if (requireAuth && user == null) {
-          return LoginPage();
-        } else if (!requireAuth && user != null) {
-          return IndexPage();
-        }
-        return child;
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<DarkThemeProvider>(context);
@@ -69,8 +55,20 @@ class Langverse extends StatelessWidget {
         '/register': (context) =>
             _routeWrapper(child: RegisterPage(), requireAuth: false),
         '/index': (context) => _routeWrapper(child: IndexPage()),
-        '/opponent-search': (context) => OpponentSearchPage(),
-        '/duel/:id': (context) => DuelPage(),
+      },
+    );
+  }
+
+  Widget _routeWrapper({required Widget child, bool requireAuth = true}) {
+    return Builder(
+      builder: (context) {
+        final user = FirebaseAuth.instance.currentUser;
+        if (requireAuth && user == null) {
+          return LoginPage();
+        } else if (!requireAuth && user != null) {
+          return IndexPage();
+        }
+        return child;
       },
     );
   }
