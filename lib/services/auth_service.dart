@@ -41,6 +41,7 @@ class AuthService {
         'username': username,
         'email': email,
         'dateOfBirth': dob,
+        'lastJoinedRoom': "",
         'gender': gender,
         'nativeLanguage': nativeLanguage,
       });
@@ -64,7 +65,6 @@ class AuthService {
     try {
       return await _auth.signOut();
     } catch (e) {
-      print(e.toString());
       return null;
     }
   }

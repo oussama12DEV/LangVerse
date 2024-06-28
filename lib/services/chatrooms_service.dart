@@ -108,7 +108,6 @@ class ChatroomsService {
           chatRoom.currentUsers.add(userId);
           await chatRoomRef.update({'currentUsers': chatRoom.currentUsers});
 
-          // Update the user's document to store only the last joined room
           final userRef =
               FirebaseFirestore.instance.collection('users').doc(userId);
           await userRef.update({'lastJoinedRoom': chatRoomId});
@@ -209,8 +208,8 @@ class ChatroomsService {
   static Future<List<ChatRoom>> searchChatRooms({
     String? name,
     String? language,
-    int limit = 10, // Limite par défaut à 10 par page
-    DocumentSnapshot? startAfter, // Pour la pagination
+    int limit = 10,
+    DocumentSnapshot? startAfter,
   }) async {
     try {
       Query query = FirebaseFirestore.instance.collection('chatrooms');
@@ -229,7 +228,7 @@ class ChatroomsService {
         query = query.startAfterDocument(startAfter);
       }
 
-      query = query.limit(limit); // Limite le nombre de résultats par page
+      query = query.limit(limit);
 
       QuerySnapshot querySnapshot = await query.get();
       return querySnapshot.docs

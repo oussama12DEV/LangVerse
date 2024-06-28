@@ -18,7 +18,6 @@ class QuizService {
       });
       return docRef.id;
     } catch (e) {
-      print('Error creating quiz request: $e');
       rethrow;
     }
   }
@@ -35,7 +34,6 @@ class QuizService {
         await querySnapshot.docs.first.reference.delete();
       }
     } catch (e) {
-      print('Error canceling quiz request: $e');
       rethrow;
     }
   }
@@ -75,12 +73,11 @@ class QuizService {
 
       return '';
     } catch (e) {
-      print('Error finding matching quiz request: $e');
       rethrow;
     }
   }
 
-  // Abandon a duel by updating the abandoned field
+  // Abandon a duel by updating the "abandoned" field
   Future<void> abandonDuel(String duelId) async {
     try {
       String currentUserId = FirebaseAuth.instance.currentUser!.uid;
@@ -89,7 +86,6 @@ class QuizService {
         'abandoned': currentUserId,
       });
     } catch (e) {
-      print('Error abandoning duel: $e');
       rethrow;
     }
   }
@@ -112,7 +108,6 @@ class QuizService {
             duelSnapshot.get('level'), duelSnapshot.get('category'));
       }
     } catch (e) {
-      print('Error marking user as ready: $e');
       rethrow;
     }
   }
@@ -145,12 +140,10 @@ class QuizService {
         });
       }
     } catch (e) {
-      print('Error starting duel: $e');
       rethrow;
     }
   }
 
-  // Helper function to get the active duel ID for the current user
   Future<String?> _getActiveDuelId() async {
     try {
       String currentUserId = FirebaseAuth.instance.currentUser!.uid;
@@ -177,7 +170,6 @@ class QuizService {
 
       return null;
     } catch (e) {
-      print('Error getting active duel ID: $e');
       rethrow;
     }
   }
@@ -191,7 +183,6 @@ class QuizService {
       batch.delete(_firestore.collection('quiz_requests').doc(quizRequestId2));
       await batch.commit();
     } catch (e) {
-      print('Error deleting quiz requests: $e');
       rethrow;
     }
   }
@@ -200,10 +191,9 @@ class QuizService {
   Future<String> _createQuizDuel(String currentUserId, String opponentUserId,
       String language, String level, String category) async {
     try {
-      // Use batched writes for atomicity
       WriteBatch batch = _firestore.batch();
 
-      // Create a new quiz duel in Firestore
+      // Create a new quiz duel
       DocumentReference quizDuelRef = _firestore.collection('quiz_duels').doc();
 
       batch.set(quizDuelRef, {
@@ -214,7 +204,7 @@ class QuizService {
         'numRounds': 5,
         'currentRound': 0,
         'active': true,
-        'abandoned': null, // Initially, no user has abandoned the duel
+        'abandoned': null,
         'user1Started': false,
         'user2Started': false,
         'language': language,
@@ -222,12 +212,10 @@ class QuizService {
         'category': category,
       });
 
-      // Commit the batched writes
       await batch.commit();
 
       return quizDuelRef.id;
     } catch (e) {
-      print('Error creating quiz duel: $e');
       rethrow;
     }
   }

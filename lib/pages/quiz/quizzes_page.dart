@@ -125,20 +125,18 @@ class _QuizzesPageState extends State<QuizzesPage> {
     });
 
     try {
-      // Create quiz request in Firestore
       String quizRequestId = await quizService.createQuizRequest(
         selectedLanguage,
         selectedLevel,
         selectedCategory,
       );
 
-      // Show searching dialog
       showDialog(
         context: context,
         barrierDismissible: false,
         builder: (BuildContext context) {
           return AlertDialog(
-            content: Row(
+            content: const Row(
               children: [
                 CircularProgressIndicator(),
                 SizedBox(width: 20),
@@ -151,36 +149,25 @@ class _QuizzesPageState extends State<QuizzesPage> {
                   _cancelSearch();
                   Navigator.of(context).pop();
                 },
-                child: Text('Cancel'),
+                child: const Text('Cancel'),
               ),
             ],
           );
         },
       );
 
-      // Poll Firestore for matching quiz request
       String quizDuelId = await _pollForMatch(quizRequestId);
-
-      // Dismiss searching dialog
       Navigator.of(context).pop();
 
       if (quizDuelId.isNotEmpty) {
-        // Navigate to duel screen upon successful match
         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => DuelPage(duelId: quizDuelId),
           ),
         );
-      } else {
-        // Handle case where no match was found
-
-        print('No match found!');
-        // Optionally show a message to the user
       }
     } catch (e) {
-      print('Error handling find opponent: $e');
-      // Handle error gracefully, e.g., show an error message to the user
     } finally {
       setState(() {
         isLoading = false;
@@ -189,11 +176,10 @@ class _QuizzesPageState extends State<QuizzesPage> {
   }
 
   Future<String> _pollForMatch(String quizRequestId) async {
-    const int pollInterval = 1000; // 1 second
+    const int pollInterval = 1000;
     String quizDuelId = '';
 
     while (quizDuelId.isEmpty) {
-      // Poll Firestore to check for matching quiz request
       quizDuelId = await quizService.findMatchingQuizRequest(
         quizRequestId,
         selectedLanguage,
@@ -205,15 +191,13 @@ class _QuizzesPageState extends State<QuizzesPage> {
         break;
       }
 
-      // Wait for next poll interval
-      await Future.delayed(Duration(milliseconds: pollInterval));
+      await Future.delayed(const Duration(milliseconds: pollInterval));
     }
 
     return quizDuelId;
   }
 
   void _cancelSearch() {
-    // Implement logic to cancel search and delete current user's quiz request
     quizService.cancelQuizRequest();
     setState(() {
       isLoading = false;

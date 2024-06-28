@@ -38,9 +38,7 @@ class _MessageBubbleState extends State<MessageBubble> {
       setState(() {
         username = userDoc['username'];
       });
-    } catch (e) {
-      print('Error fetching username: $e');
-    }
+    } catch (e) {}
   }
 
   @override

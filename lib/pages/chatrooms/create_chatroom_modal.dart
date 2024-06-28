@@ -10,7 +10,7 @@ class CreateChatRoomModal extends StatefulWidget {
 class _CreateChatRoomModalState extends State<CreateChatRoomModal> {
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
   String title = '';
-  int userLimit = 1; // Default value
+  int userLimit = 1;
   String? selectedLanguage;
   List<String> languages = ['French', 'English', 'Spanish'];
 

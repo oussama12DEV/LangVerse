@@ -51,9 +51,7 @@ class _InsideChatroomPageState extends State<InsideChatroomPage> {
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeOut,
       );
-    }).catchError((error) {
-      print("Failed to send message: $error");
-    });
+    }).catchError((error) {});
   }
 
   @override

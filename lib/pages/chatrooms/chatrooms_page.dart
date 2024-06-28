@@ -20,6 +20,8 @@ class _ChatroomsPageState extends State<ChatroomsPage> {
   bool _hasMore = true;
   String _selectedLanguage = 'All Languages';
   String _selectedFilter = 'All Rooms';
+  int currentPage = 1;
+  final int roomsPerPage = 10;
   final User? _currentUser = FirebaseAuth.instance.currentUser;
 
   @override
@@ -38,7 +40,7 @@ class _ChatroomsPageState extends State<ChatroomsPage> {
     try {
       Map<String, dynamic> result = await ChatroomsService.fetchChatRooms(
         lastDocument: _lastDocument,
-        limit: 10,
+        limit: roomsPerPage,
       );
 
       List<ChatRoom> newChatRooms = result['chatRooms'];
@@ -52,7 +54,7 @@ class _ChatroomsPageState extends State<ChatroomsPage> {
           _chatRooms = newChatRooms;
         }
 
-        if (newChatRooms.length < 10) {
+        if (newChatRooms.length < roomsPerPage) {
           _hasMore = false;
         } else {
           _lastDocument = newLastDocument;
@@ -64,8 +66,12 @@ class _ChatroomsPageState extends State<ChatroomsPage> {
         _hasMore = false;
         _chatRooms = [];
       });
+    }
+  }
 
-      print('Error fetching chat rooms: $e');
+  void _nextPage() {
+    if (_hasMore) {
+      _fetchChatRooms(isLoadMore: true);
     }
   }
 
@@ -103,8 +109,6 @@ class _ChatroomsPageState extends State<ChatroomsPage> {
         _isLoading = false;
         _chatRooms = [];
       });
-
-      print('Error searching chat rooms: $e');
     }
   }
 
@@ -181,67 +185,34 @@ class _ChatroomsPageState extends State<ChatroomsPage> {
             ),
           ),
           Expanded(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('chatrooms')
-                  .snapshots(),
-              builder: (context, snapshot) {
-                if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
-                }
-
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                List<ChatRoom> chatRooms = snapshot.data!.docs.map((doc) {
-                  return ChatRoom.fromMap(doc.data() as Map<String, dynamic>);
-                }).toList();
-
-                if (_searchController.text.isNotEmpty) {
-                  chatRooms = chatRooms
-                      .where((chatRoom) => chatRoom.title
-                          .toLowerCase()
-                          .contains(_searchController.text.toLowerCase()))
-                      .toList();
-                }
-
-                if (_selectedLanguage != 'All Languages') {
-                  chatRooms = chatRooms
-                      .where((chatRoom) =>
-                          chatRoom.language.toLowerCase() ==
-                          _selectedLanguage.toLowerCase())
-                      .toList();
-                }
-
-                if (_selectedFilter == 'My Rooms') {
-                  chatRooms = chatRooms
-                      .where(
-                          (chatRoom) => chatRoom.creatorId == _currentUser!.uid)
-                      .toList();
-                }
-
-                return ListView.builder(
-                  itemCount: chatRooms.length,
-                  itemBuilder: (context, index) {
-                    final chatRoom = chatRooms[index];
-                    return ChatRoomTile(
-                      chatRoom: chatRoom,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                InsideChatroomPage(chatRoom: chatRoom),
-                          ),
-                        );
-                      },
+            child: ListView.builder(
+              itemCount: _chatRooms.length,
+              itemBuilder: (context, index) {
+                final chatRoom = _chatRooms[index];
+                return ChatRoomTile(
+                  chatRoom: chatRoom,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            InsideChatroomPage(chatRoom: chatRoom),
+                      ),
                     );
                   },
                 );
               },
             ),
           ),
+          if (_isLoading)
+            const Center(
+              child: CircularProgressIndicator(),
+            ),
+          if (!_isLoading && _hasMore)
+            TextButton(
+              onPressed: _nextPage,
+              child: const Text('Next'),
+            ),
         ],
       ),
       floatingActionButton: FloatingActionButton(

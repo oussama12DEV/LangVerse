@@ -60,10 +60,10 @@ class _IndexPageState extends State<IndexPage> with TickerProviderStateMixin {
           color: themeProvider.darkTheme ? Colors.white : Colors.black,
           fontWeight: FontWeight.w500,
         ),
-        tabIconColor: const Color(4278216824),
+        tabIconColor: const Color(0xff006878),
         tabIconSize: 28.0,
         tabIconSelectedSize: 26.0,
-        tabSelectedColor: const Color(4278216824),
+        tabSelectedColor: const Color(0xff006878),
         tabIconSelectedColor: Colors.white,
         tabBarColor: Theme.of(context).scaffoldBackgroundColor,
         onTabItemSelected: (int value) {

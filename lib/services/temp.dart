@@ -396,6 +396,4 @@ Future<void> populateDatabase() async {
       }
     }
   }
-
-  print('French quiz populated successfully!');
 }

@@ -5,9 +5,10 @@ import 'package:fluttertoast/fluttertoast.dart';
 
 class UserService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   Future<DocumentSnapshot<Map<String, dynamic>>?> initializeUserData() async {
-    User? currentUser = FirebaseAuth.instance.currentUser;
+    User? currentUser = _auth.currentUser;
     if (currentUser != null) {
       return await _db.collection('users').doc(currentUser.uid).get();
     }
@@ -32,5 +33,28 @@ class UserService {
 
   getUserProgress(String userId) {
     return _db.collection('users').doc(userId).get();
+  }
+
+  Future<void> sendPasswordResetEmail(String email) async {
+    try {
+      await _auth.sendPasswordResetEmail(email: email);
+      Fluttertoast.showToast(
+        msg: 'Password reset email sent',
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        timeInSecForIosWeb: 1,
+        textColor: Colors.white,
+        fontSize: 16.0,
+      );
+    } catch (e) {
+      Fluttertoast.showToast(
+        msg: 'Failed to send password reset email',
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        timeInSecForIosWeb: 1,
+        textColor: Colors.white,
+        fontSize: 16.0,
+      );
+    }
   }
 }

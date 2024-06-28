@@ -165,11 +165,8 @@ class _RegisterPageState extends State<RegisterPage> {
                         gender,
                         preferredLanguage,
                       );
-                      if (result == null) {
-                        print('Could not sign up with those credentials');
-                      } else {
-                        print('Signed up successfully');
-                        // Navigate to home or another screen upon successful registration
+                      if (result != null) {
+                        Navigator.pushReplacementNamed(context, '/login');
                       }
                     }
                   }

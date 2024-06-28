@@ -72,9 +72,7 @@ class _DuelPageState extends State<DuelPage> {
   Future<void> _startDuel() async {
     try {
       await QuizService().markUserAsReady(widget.duelId, _isUser1);
-    } catch (e) {
-      print('Error starting duel: $e');
-    }
+    } catch (e) {}
   }
 
   void _showAbandonedDialog() {
@@ -83,16 +81,15 @@ class _DuelPageState extends State<DuelPage> {
         context: context,
         builder: (context) {
           return AlertDialog(
-            title: Text('Duel Abandoned'),
+            title: const Text('Duel Abandoned'),
             content: Text(
                 'Your opponent $_opponentUsername has abandoned the duel. You win!'),
             actions: [
               TextButton(
-                child: Text('OK'),
+                child: const Text('OK'),
                 onPressed: () {
                   Navigator.of(context).pop();
-                  Navigator.of(context)
-                      .pop(); // Optionally, navigate back to another page
+                  Navigator.of(context).pop();
                 },
               ),
             ],
@@ -106,29 +103,28 @@ class _DuelPageState extends State<DuelPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Quiz Duel'),
+        title: const Text('Quiz Duel'),
       ),
       body: StreamBuilder<DocumentSnapshot>(
         stream: _duelStream,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           }
 
           if (!snapshot.hasData || snapshot.data!.data() == null) {
-            return Center(child: Text('Duel data not available'));
+            return const Center(child: Text('Duel data not available'));
           }
 
           var duelData = snapshot.data!.data() as Map<String, dynamic>;
           _bothUsersStarted =
               duelData['user1Started'] && duelData['user2Started'];
 
-          // Check if opponent abandoned
           if (duelData['abandoned'] == _opponentUserId) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               _showAbandonedDialog();
             });
-            return Container(); // or return some placeholder widget
+            return Container();
           }
 
           return Column(
@@ -138,19 +134,17 @@ class _DuelPageState extends State<DuelPage> {
                 username: _currentUserUsername,
                 score: duelData[_isUser1 ? 'score1' : 'score2'],
               ),
-              SizedBox(height: 20),
+              if (_bothUsersStarted) QuizQuestionWidget(),
               UserScoreWidget(
                 username: _opponentUsername,
                 score: duelData[_isUser1 ? 'score2' : 'score1'],
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               if (!_bothUsersStarted)
                 ElevatedButton(
                   onPressed: _startDuel,
-                  child: Text('Start Duel'),
+                  child: const Text('Start Duel'),
                 ),
-              if (_bothUsersStarted)
-                QuizQuestionWidget(), // Replace with your quiz UI
             ],
           );
         },
