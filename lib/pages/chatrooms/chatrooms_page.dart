@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:langverse/models/Chatroom.dart';
-import 'package:langverse/services/chatrooms_service.dart';
 import 'package:langverse/widgets/chatroom_tile_widget.dart';
 import 'inside_chatroom_page.dart';
 import 'create_chatroom_modal.dart';
@@ -14,102 +13,29 @@ class ChatroomsPage extends StatefulWidget {
 
 class _ChatroomsPageState extends State<ChatroomsPage> {
   final TextEditingController _searchController = TextEditingController();
-  List<ChatRoom> _chatRooms = [];
-  DocumentSnapshot? _lastDocument;
-  bool _isLoading = false;
-  bool _hasMore = true;
   String _selectedLanguage = 'All Languages';
   String _selectedFilter = 'All Rooms';
-  int currentPage = 1;
-  final int roomsPerPage = 10;
   final User? _currentUser = FirebaseAuth.instance.currentUser;
+  late Stream<QuerySnapshot> _chatRoomsStream;
 
   @override
   void initState() {
     super.initState();
-    _fetchChatRooms();
+    _chatRoomsStream = _getChatRoomsStream();
   }
 
-  Future<void> _fetchChatRooms({bool isLoadMore = false}) async {
-    if (_isLoading) return;
+  Stream<QuerySnapshot> _getChatRoomsStream() {
+    Query query = FirebaseFirestore.instance.collection('chatrooms');
 
-    setState(() {
-      _isLoading = true;
-    });
-
-    try {
-      Map<String, dynamic> result = await ChatroomsService.fetchChatRooms(
-        lastDocument: _lastDocument,
-        limit: roomsPerPage,
-      );
-
-      List<ChatRoom> newChatRooms = result['chatRooms'];
-      DocumentSnapshot? newLastDocument = result['lastDocument'];
-
-      setState(() {
-        _isLoading = false;
-        if (isLoadMore) {
-          _chatRooms.addAll(newChatRooms);
-        } else {
-          _chatRooms = newChatRooms;
-        }
-
-        if (newChatRooms.length < roomsPerPage) {
-          _hasMore = false;
-        } else {
-          _lastDocument = newLastDocument;
-        }
-      });
-    } catch (e) {
-      setState(() {
-        _isLoading = false;
-        _hasMore = false;
-        _chatRooms = [];
-      });
+    if (_selectedLanguage != 'All Languages') {
+      query = query.where('language', isEqualTo: _selectedLanguage);
     }
-  }
 
-  void _nextPage() {
-    if (_hasMore) {
-      _fetchChatRooms(isLoadMore: true);
+    if (_selectedFilter == 'My Rooms') {
+      query = query.where('creatorId', isEqualTo: _currentUser!.uid);
     }
-  }
 
-  void _searchChatRooms(String searchText) async {
-    setState(() {
-      _isLoading = true;
-      _hasMore = false;
-    });
-
-    try {
-      List<ChatRoom> searchResults = await ChatroomsService.searchChatRooms(
-        name: searchText,
-      );
-
-      if (_selectedLanguage != 'All Languages') {
-        searchResults = searchResults
-            .where((chatRoom) =>
-                chatRoom.language.toLowerCase() ==
-                _selectedLanguage.toLowerCase())
-            .toList();
-      }
-
-      if (_selectedFilter == 'My Rooms') {
-        searchResults = searchResults
-            .where((chatRoom) => chatRoom.creatorId == _currentUser!.uid)
-            .toList();
-      }
-
-      setState(() {
-        _isLoading = false;
-        _chatRooms = searchResults;
-      });
-    } catch (e) {
-      setState(() {
-        _isLoading = false;
-        _chatRooms = [];
-      });
-    }
+    return query.snapshots();
   }
 
   void _showCreateChatRoomModal(BuildContext context) {
@@ -122,15 +48,27 @@ class _ChatroomsPageState extends State<ChatroomsPage> {
   void _selectFilter(String filter) {
     setState(() {
       _selectedFilter = filter;
+      _chatRoomsStream = _getChatRoomsStream();
     });
-    _searchChatRooms(_searchController.text.trim());
   }
 
   void _selectLanguage(String language) {
     setState(() {
       _selectedLanguage = language;
+      _chatRoomsStream = _getChatRoomsStream();
     });
-    _searchChatRooms(_searchController.text.trim());
+  }
+
+  void _searchChatRooms(String searchText) {
+    setState(() {
+      _chatRoomsStream = _getChatRoomsStream().where((snapshot) {
+        return snapshot.docs.any((doc) =>
+            (doc.data() as Map<String, dynamic>)['title']
+                .toString()
+                .toLowerCase()
+                .contains(searchText.toLowerCase()));
+      });
+    });
   }
 
   @override
@@ -185,34 +123,44 @@ class _ChatroomsPageState extends State<ChatroomsPage> {
             ),
           ),
           Expanded(
-            child: ListView.builder(
-              itemCount: _chatRooms.length,
-              itemBuilder: (context, index) {
-                final chatRoom = _chatRooms[index];
-                return ChatRoomTile(
-                  chatRoom: chatRoom,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            InsideChatroomPage(chatRoom: chatRoom),
-                      ),
+            child: StreamBuilder<QuerySnapshot>(
+              stream: _chatRoomsStream,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  return const Center(child: Text('No chatrooms found.'));
+                }
+
+                List<ChatRoom> chatRooms = snapshot.data!.docs.map((doc) {
+                  var data = doc.data() as Map<String, dynamic>;
+                  data['id'] = doc.id;
+                  return ChatRoom.fromMap(data);
+                }).toList();
+
+                return ListView.builder(
+                  itemCount: chatRooms.length,
+                  itemBuilder: (context, index) {
+                    final chatRoom = chatRooms[index];
+                    return ChatRoomTile(
+                      chatRoom: chatRoom,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                InsideChatroomPage(chatRoom: chatRoom),
+                          ),
+                        );
+                      },
                     );
                   },
                 );
               },
             ),
           ),
-          if (_isLoading)
-            const Center(
-              child: CircularProgressIndicator(),
-            ),
-          if (!_isLoading && _hasMore)
-            TextButton(
-              onPressed: _nextPage,
-              child: const Text('Next'),
-            ),
         ],
       ),
       floatingActionButton: FloatingActionButton(
