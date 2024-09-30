@@ -1,8 +1,7 @@
 # LangVerse
 <img src="assets/images/logo_light.png" alt="text" width="25%">
 
-**LangVerse** is a collaborative Flutter mobile app project designed to facilitate language learning through interactive chatrooms and quiz duels between users.
-
+**LangVerse** is a collaborative mobile app project built using Flutter, aimed at enhancing language learning through interactive chat rooms and quiz duels between users.
 ## Features
 
 ### 1. Authentication
