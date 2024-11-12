@@ -50,7 +50,7 @@ To run the LangVerse app on your local machine, follow these steps:
    ```
 2. **Navigate to the project directory**:
    ```bash
-   cd Langerse
+   cd Langverse
    ```
 3. **Install dependencies**:
    ```bash
